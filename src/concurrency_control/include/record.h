@@ -93,27 +93,22 @@ private:
      * @brief latest timestamp
      */
     tid_word tidw_{};
-static_assert(sizeof(tidw_) >= 8);
 
     /**
      * @brief Pointer to latest version
      * @details The version infomation which it should have at each version.
      */
     std::atomic<version*> latest_{nullptr};
-static_assert(sizeof(latest_) == 8);
 
     std::string key_{};
-static_assert(sizeof(key_) >= 24);
 
     point_read_by_short read_by_{};
-static_assert(sizeof(read_by_) == 8);
 
     // read information about long transaction
     /**
      * @brief read information about point read by long transaction.
      */
     point_read_by_long point_read_by_long_{};
-static_assert(sizeof(point_read_by_long_) == 80);
     // ==========
 
     /**

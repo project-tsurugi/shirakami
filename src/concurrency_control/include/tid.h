@@ -28,7 +28,7 @@ public:
             std::uint64_t tid_ : 52;
             bool by_short_ : 1;
             int : 11; // reserved
-            std::uint64_t epoch_ : 52;
+            epoch::epoch_t epoch_ : 52;
         };
     };
 
