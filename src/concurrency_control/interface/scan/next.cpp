@@ -243,7 +243,7 @@ static void check_ltx_scan_range_rp_and_log(session* ti, Storage st, std::string
         return;
     }
     {
-        std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
+        std::scoped_lock lk{ti->get_mtx_overtaken_ltx_set()};
 
         auto& read_range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
         if (std::get<2>(read_range) < r_key) {

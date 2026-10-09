@@ -72,7 +72,7 @@ Status ongoing_tx::waiting_bypass(session* ti) {
     // remove bypassed target information
     {
         // get mutex for overtaken ltx set
-        std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
+        std::scoped_lock lk{ti->get_mtx_overtaken_ltx_set()};
 
         for (auto ols_itr = ti->get_overtaken_ltx_set().begin();
              // for each storage
@@ -113,8 +113,7 @@ Status ongoing_tx::waiting_bypass(session* ti) {
                 {
                     auto* bypass_token = std::get<1>(bt);
                     // get mutex for overtaken ltx set
-                    std::lock_guard<std::shared_mutex> lk{
-                            ti->get_mtx_overtaken_ltx_set()};
+                    std::scoped_lock lk{ti->get_mtx_overtaken_ltx_set()};
                     std::shared_lock<std::shared_mutex> lk2{
                             bypass_token->get_mtx_overtaken_ltx_set()};
                     for (auto&& ols_elem :
@@ -240,7 +239,7 @@ bool ongoing_tx::exist_wait_for(session* ti, Status& out_status) {
 }
 
 void ongoing_tx::push(tx_info_elem_type const ti) {
-    std::lock_guard<std::shared_mutex> lk{mtx_};
+    std::scoped_lock lk{mtx_};
     tx_info_.emplace_back(ti);
 }
 
@@ -249,7 +248,7 @@ void ongoing_tx::push_bringing_lock(tx_info_elem_type const ti) {
 }
 
 void ongoing_tx::remove_id(std::size_t const id) {
-    std::lock_guard<std::shared_mutex> lk{mtx_};
+    std::scoped_lock lk{mtx_};
     epoch::epoch_t lep{0};
     bool first{true};
     bool erased{false};

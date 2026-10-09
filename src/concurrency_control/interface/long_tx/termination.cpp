@@ -446,7 +446,7 @@ static Status verify(session* const ti) {
         std::shared_lock<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
         for (auto&& oe : ti->get_overtaken_ltx_set()) {
             wp::wp_meta* wp_meta_ptr{oe.first};
-            std::lock_guard<std::shared_mutex> lk{wp_meta_ptr->get_mtx_wp_result_set()};
+            std::scoped_lock lk{wp_meta_ptr->get_mtx_wp_result_set()};
             bool is_first_item_before_gc_threshold{true};
             auto read_range = std::get<1>(oe.second);
             for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();

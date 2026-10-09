@@ -28,7 +28,7 @@ void extract_higher_priori_ltx_info(session* const ti,
     auto undefined_hit_process = [ti, wp_meta_ptr,
                                   key](std::size_t against_id) {
         // get mutex for strand
-        std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
+        std::scoped_lock lk{ti->get_mtx_overtaken_ltx_set()};
 
         /**
          * If this is the first forwarding against this table,
@@ -98,7 +98,7 @@ void extract_higher_priori_ltx_info(session* const ti,
     // undefined hit process
     auto undefined_hit_process = [ti, wp_meta_ptr](std::size_t against_id) {
         // get mutex
-        std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
+        std::scoped_lock lk{ti->get_mtx_overtaken_ltx_set()};
 
         /**
          * If this is the first forwarding against this table,

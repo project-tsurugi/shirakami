@@ -117,7 +117,7 @@ private:
 class scan_handler {
 public:
     void clear() {
-        std::lock_guard lk{mtx_allocated_}; // for strand
+        std::scoped_lock lk{mtx_allocated_}; // for strand
         for (auto itr = allocated_.begin(); itr != allocated_.end(); ) {
             itr = allocated_.erase(itr);
         }
@@ -128,7 +128,7 @@ public:
 
     Status delete_scan_cache(scan_cache_obj* sc) {
         {
-            std::lock_guard lk{mtx_allocated_}; // for strand
+            std::scoped_lock lk{mtx_allocated_}; // for strand
             auto itr = allocated_.find(sc);
             if (itr == allocated_.end()) {
                 return Status::WARN_INVALID_HANDLE;
@@ -141,7 +141,7 @@ public:
 
     Status delete_scan_context(scan_context* sc) {
         {
-            std::lock_guard lk{mtx_allocated_}; // for strand
+            std::scoped_lock lk{mtx_allocated_}; // for strand
             auto itr = allocated_i_.find(sc);
             if (itr == allocated_i_.end()) {
                 return Status::WARN_INVALID_HANDLE;
@@ -155,7 +155,7 @@ public:
     scan_cache_obj* create_scan_cache() {
         auto* sc = new scan_cache_obj(); // NOLINT
         sc->set_parent(this);
-        std::lock_guard lk{mtx_allocated_};
+        std::scoped_lock lk{mtx_allocated_};
         allocated_.insert(std::unique_ptr<scan_cache_obj>{sc});
         return sc;
     }
@@ -163,7 +163,7 @@ public:
     scan_context* create_scan_context() {
         auto* sc = new scan_context(); // NOLINT
         sc->set_parent(this);
-        std::lock_guard lk{mtx_allocated_};
+        std::scoped_lock lk{mtx_allocated_};
         allocated_i_.insert(std::unique_ptr<scan_context>{sc});
         return sc;
     }
@@ -175,7 +175,7 @@ public:
     Status check_valid_scan_handle(scan_cache_obj* sc) {
         if constexpr (precise_handle_check) {
             // for strand
-            std::lock_guard lk{mtx_allocated_};
+            std::scoped_lock lk{mtx_allocated_};
             if (allocated_.find(sc) == allocated_.end()) {
                 return Status::WARN_INVALID_HANDLE;
             }
@@ -190,7 +190,7 @@ public:
     Status check_valid_scan_handle(scan_context* sc) {
         if constexpr (precise_handle_check) {
             // for strand
-            std::lock_guard lk{mtx_allocated_};
+            std::scoped_lock lk{mtx_allocated_};
             if (allocated_i_.find(sc) == allocated_i_.end()) {
                 return Status::WARN_INVALID_HANDLE;
             }

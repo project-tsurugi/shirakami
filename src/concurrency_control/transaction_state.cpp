@@ -167,7 +167,7 @@ static Status check_ltx_is_highest_priority_body(Token token, bool& out) {
 
     {
         // take shared lock for ongoing tx info
-        std::lock_guard<std::shared_mutex> lk{ongoing_tx::get_mtx()};
+        std::scoped_lock lk{ongoing_tx::get_mtx()};
         // check highest tx id
         std::size_t highest_tx_id{std::get<ongoing_tx::index_id>(
                 (*ongoing_tx::get_tx_info().begin()))};

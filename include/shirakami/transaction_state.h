@@ -114,7 +114,7 @@ public:
 
     static Status find_and_erase_tx_state(TxStateHandle hd, Token& token) {
         {
-            std::lock_guard<std::shared_mutex> lk{mtx_hc_};
+            std::scoped_lock lk{mtx_hc_};
             auto itr = handle_container_.find(hd);
             if (itr != handle_container_.end()) {
                 token = itr->second.get_token();
@@ -151,7 +151,7 @@ public:
     }
 
     static void insert_tx_state(TxStateHandle hd) {
-        std::lock_guard<std::shared_mutex> lk{mtx_hc_};
+        std::scoped_lock lk{mtx_hc_};
         handle_container_.insert(std::make_pair(hd, TxState()));
     }
 

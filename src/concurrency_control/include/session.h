@@ -425,37 +425,35 @@ public:
     }
 
     void clear_ltx_storage_read_set() {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_ltx_storage_read_set()};
+        std::scoped_lock lk{get_mtx_ltx_storage_read_set()};
         get_ltx_storage_read_set().clear();
     }
 
     void clear_overtaken_ltx_set() {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_overtaken_ltx_set()};
+        std::scoped_lock lk{get_mtx_overtaken_ltx_set()};
         overtaken_ltx_set_.clear();
     }
 
     void clear_range_read_by_short_set() {
         // take write lock
-        std::lock_guard<std::shared_mutex> lk{
-                get_mtx_range_read_by_short_set()};
+        std::scoped_lock lk{get_mtx_range_read_by_short_set()};
         get_range_read_by_short_set().clear();
     }
 
     void push_to_range_read_by_short_set(range_read_by_short* rrbs) {
         // take write lock
-        std::lock_guard<std::shared_mutex> lk{
-                get_mtx_range_read_by_short_set()};
+        std::scoped_lock lk{get_mtx_range_read_by_short_set()};
         get_range_read_by_short_set().insert(rrbs);
     }
 
     void clear_read_set_for_stx() {
         // take write lock
-        std::lock_guard<std::shared_mutex> lk{mtx_read_set_for_stx_};
+        std::scoped_lock lk{mtx_read_set_for_stx_};
         read_set_for_stx_.clear();
     }
 
     void insert_to_ltx_storage_read_set(Storage const st) {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_ltx_storage_read_set()};
+        std::scoped_lock lk{get_mtx_ltx_storage_read_set()};
         // find entry
         auto itr = get_ltx_storage_read_set().find(st);
         if (itr == get_ltx_storage_read_set().end()) {
@@ -468,7 +466,7 @@ public:
 
     void insert_to_ltx_storage_read_set(Storage const st,
                                         std::string const& key) {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_ltx_storage_read_set()};
+        std::scoped_lock lk{get_mtx_ltx_storage_read_set()};
         // find entry
         auto itr = get_ltx_storage_read_set().find(st);
         if (itr == get_ltx_storage_read_set().end()) {
@@ -517,7 +515,7 @@ public:
 
     void push_to_read_set_for_stx(read_set_obj&& elem) {
         // take write lock
-        std::lock_guard<std::shared_mutex> lk{mtx_read_set_for_stx_};
+        std::scoped_lock lk{mtx_read_set_for_stx_};
         read_set_for_stx_.emplace_back(std::move(elem));
     }
 
@@ -566,7 +564,7 @@ public:
     void set_mrc_tid(tid_word const& tidw) { mrc_tid_ = tidw; }
 
     void set_read_area(transaction_options::read_area const& ra) {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_read_area()};
+        std::scoped_lock lk{get_mtx_read_area()};
         read_area_ = ra;
     }
 

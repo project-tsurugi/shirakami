@@ -31,7 +31,7 @@ public:
     using cont_type = std::map<std::size_t, std::tuple<plist_type, nlist_type>>;
 
     static void clear() {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_cont()};
+        std::scoped_lock lk{get_mtx_cont()};
         get_cont().clear();
     }
     static void init() {
@@ -46,7 +46,7 @@ public:
 
     // for tx begin
     static void add_elem(std::size_t const tx_id, read_area_type const& ra) {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_cont()};
+        std::scoped_lock lk{get_mtx_cont()};
         plist_type tmp_plist;
         for (auto&& elem : ra.get_positive_list()) {
             tmp_plist.insert(std::make_tuple(elem, false, "",
@@ -59,12 +59,12 @@ public:
     // for commit submit
     static void add_elem(std::size_t const tx_id, plist_type const& pl,
                          nlist_type const& nl) {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_cont()};
+        std::scoped_lock lk{get_mtx_cont()};
         get_cont()[tx_id] = std::make_tuple(pl, nl);
     }
 
     static void remove_elem(std::size_t const tx_id) {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_cont()};
+        std::scoped_lock lk{get_mtx_cont()};
         auto itr = get_cont().find(tx_id);
         if (itr != get_cont().end()) {
             // found

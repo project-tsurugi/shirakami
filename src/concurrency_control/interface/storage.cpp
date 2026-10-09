@@ -103,7 +103,7 @@ static Status create_storage_body(std::string_view const key, Storage& storage,
     auto ret = check_constraint_key_length(key);
     if (ret != Status::OK) { return ret; }
 
-    std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
+    std::scoped_lock lk{storage::get_mtx_key_handle_map()};
     // check key existence
     Storage st{};
     if (storage::key_handle_map_get_storage_without_lock(key, st) ==
@@ -135,7 +135,7 @@ Status create_storage(std::string_view key, Storage& storage,
 }
 
 static Status delete_storage_body(Storage const storage) {
-    std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
+    std::scoped_lock lk{storage::get_mtx_key_handle_map()};
     auto ret = storage::delete_storage(storage);
     if (ret != Status::OK) { return ret; }
     // delete_storage was succeeded
@@ -186,7 +186,7 @@ Status list_storage(std::vector<std::string>& out) {
 }
 
 static Status storage_get_options_body(Storage storage, storage_option& options) {
-    std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
+    std::scoped_lock lk{storage::get_mtx_key_handle_map()};
     // key handle map get key
     std::string key{};
     auto ret = storage::key_handle_map_get_key_without_lock(storage, key);
@@ -247,7 +247,7 @@ Status storage_get_options(Storage storage, storage_option& options) {
 
 static Status storage_set_options_body(Storage storage,
                                        storage_option const& options) {
-    std::lock_guard<std::shared_mutex> lk{storage::get_mtx_key_handle_map()};
+    std::scoped_lock lk{storage::get_mtx_key_handle_map()};
     // key handle map get key
     std::string key{};
     auto ret = storage::key_handle_map_get_key_without_lock(storage, key);

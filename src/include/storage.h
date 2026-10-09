@@ -50,14 +50,14 @@ public:
         LOG(INFO) << "<< key_handle_map_display";
     }
     static Status key_handle_map_erase_storage(std::string_view const key) {
-        std::lock_guard<std::shared_mutex> lk{mtx_key_handle_map_};
+        std::scoped_lock lk{mtx_key_handle_map_};
         auto ret = key_handle_map_.erase({std::string(key)});
         if (ret == 1) { return Status::OK; }
         return Status::WARN_NOT_FOUND;
     }
 
     static Status key_handle_map_erase(Storage storage) {
-        std::lock_guard<std::shared_mutex> lk{mtx_key_handle_map_};
+        std::scoped_lock lk{mtx_key_handle_map_};
         for (auto itr = key_handle_map_.begin(); // NOLINT
              itr != key_handle_map_.end(); ++itr) {
             if (itr->second == storage) {
@@ -124,7 +124,7 @@ public:
 
     static Status key_handle_map_push_storage(std::string_view const key,
                                               Storage const st) {
-        std::lock_guard<std::shared_mutex> lk{mtx_key_handle_map_};
+        std::scoped_lock lk{mtx_key_handle_map_};
         return key_handle_map_push_storage_without_lock(key, st);
     }
 

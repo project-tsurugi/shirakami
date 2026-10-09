@@ -255,7 +255,7 @@ void wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr) {
 void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
                              const std::string_view key) {
     // get mutex
-    std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
+    std::scoped_lock lk{ti->get_mtx_overtaken_ltx_set()};
 
     auto& read_range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
     if (!std::get<4>(read_range)) {
@@ -284,7 +284,7 @@ void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
 void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
                              std::string_view l_key, scan_endpoint l_end) {
     // get mutex
-    std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
+    std::scoped_lock lk{ti->get_mtx_overtaken_ltx_set()};
 
     auto& read_range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
     if (!std::get<4>(read_range)) {
@@ -308,7 +308,7 @@ void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
                              std::string_view l_key, scan_endpoint l_end,
                              std::string_view r_key, scan_endpoint r_end) {
     // get mutex
-    std::lock_guard<std::shared_mutex> lk{ti->get_mtx_overtaken_ltx_set()};
+    std::scoped_lock lk{ti->get_mtx_overtaken_ltx_set()};
 
     auto& read_range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
     if (!std::get<4>(read_range)) {

@@ -69,7 +69,7 @@ Status tx_begin(session* const ti) {
 
     // compute future epoch
     {
-        std::lock_guard<std::shared_mutex> lk{ongoing_tx::get_mtx()};
+        std::scoped_lock lk{ongoing_tx::get_mtx()};
 
         // set epoch
         auto ep = epoch::get_global_epoch() + 1;
