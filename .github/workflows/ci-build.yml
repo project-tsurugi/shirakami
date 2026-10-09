@@ -110,6 +110,7 @@ jobs:
       CTCACHE_DIR: ${{ vars.ctcache_dir }}/almalinux-latest
       CTCACHE_SAVE_OUTPUT: 1
       CTCACHE_LOCAL: 1
+      CTCACHE_CLANG_TIDY: ${{ vars.ctcache_clang_tidy }}
 
       CC: clang
       CXX: 'clang++ -march=native'
