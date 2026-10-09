@@ -211,9 +211,8 @@ static inline void expose_local_write(
                     // case: middle of list
 
                     auto version_creation =
-                     [&wso, ctid]
-                     (version* pre_ver,
-                      version* ver) {
+                     [ ctid , & wso]
+                     (version* pre_ver, version* ver) {
                         std::string vb{};
                         if (wso.get_op() != OP_TYPE::DELETE) {
                             // load payload if not delete.
