@@ -134,12 +134,16 @@ public:
 
     /**
      * @brief set value
-     * @details It is for twice update in the same transaction.
+     * @attention use when combining write_ops
      */
     void set_val(std::string_view const val) { val_ = val; }
 
     void set_inc_tombstone(bool tf) { inc_tombstone_ = tf; }
 
+    /**
+     * @brief set lobs info
+     * @attention use when combining write_ops
+     */
     void set_lobs(std::vector<blob_id_type>&& lobs) { lobs_ = std::move(lobs); }
 
 private:
