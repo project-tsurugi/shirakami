@@ -137,6 +137,7 @@ jobs:
           #python3 tools/bin/run-clang-tidy.py -clang-tidy-binary=/opt/ctcache/clang-tidy -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src|bench)/.*\.(h|hh)$' $(pwd)'/(src|bench)/.*' 2>&1 | awk '!a[$0]++{print > "build/clang-tidy.log"}'
           python3 tools/bin/run-clang-tidy.py -clang-tidy-binary=/opt/ctcache/clang-tidy -quiet -export-fixes=build/clang-tidy-fix.yaml -p build -extra-arg=-Wno-unknown-warning-option -extra-arg=-fsized-deallocation -header-filter=$(pwd)'/(include|src)/.*\.(h|hh)$' $(pwd)'/src/.*' 2>&1 | tee build/ct-raw.txt | awk '!a[$0]++{print > "build/clang-tidy.log"}'
           grep modernize-type-traits -C 20 build/ct-raw.txt
+          head -n 10000 build/clang-tidy-fix.yaml
 
       - name: Doxygen
         run: |
