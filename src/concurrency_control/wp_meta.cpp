@@ -139,7 +139,7 @@ Status wp_meta::register_wp(epoch::epoch_t ep, std::size_t id) {
 [[nodiscard]] Status
 wp_meta::register_wp_result_and_remove_wp(wp_result_elem_type const& elem) {
     {
-        std::lock_guard<std::shared_mutex> lk{mtx_wp_result_set_};
+        std::scoped_lock lk{mtx_wp_result_set_};
         wp_result_set_.emplace_back(elem);
     }
     wp_lock_.lock();
@@ -167,7 +167,7 @@ wp_meta::register_wp_result_and_remove_wp(wp_result_elem_type const& elem) {
 
 void wp_meta::push_write_range(std::size_t txid, std::string_view left_key,
                                std::string_view right_key) {
-    std::lock_guard<std::shared_mutex> lk{get_mtx_write_range()};
+    std::scoped_lock lk{get_mtx_write_range()};
 
     auto ret_pair = get_write_range().emplace(
             txid, std::make_tuple(left_key, right_key));
@@ -179,7 +179,7 @@ void wp_meta::push_write_range(std::size_t txid, std::string_view left_key,
 }
 
 void wp_meta::remove_write_range(std::size_t const txid) {
-    std::lock_guard<std::shared_mutex> lk{get_mtx_write_range()};
+    std::scoped_lock lk{get_mtx_write_range()};
 
     auto ret_num = get_write_range().erase(txid);
     if (ret_num != 1) {

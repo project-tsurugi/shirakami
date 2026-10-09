@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <mutex>
 
 #include "boost/filesystem/path.hpp"
 
@@ -201,7 +202,7 @@ void recovery_from_datastore(std::size_t thread_num) {
 
     auto recovery_work = [&mtx, &st_list, &max_id](std::unique_ptr<limestone::api::cursor> cursor){
         auto [max_id_1, st_list_1] = recovery_from_cursor(std::move(cursor));
-        std::lock_guard lk{mtx};
+        std::scoped_lock lk{mtx};
         max_id = std::max(max_id, max_id_1);
         st_list.insert(st_list.end(), st_list_1.begin(), st_list_1.end());
     };

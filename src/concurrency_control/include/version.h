@@ -5,6 +5,7 @@
 #pragma once
 
 #include <atomic>
+#include <mutex>
 #include <shared_mutex>
 #include <string_view>
 
@@ -56,7 +57,7 @@ public:
      * @pre This is also for initialization of version.
      */
     void set_value(std::string_view const value) {
-        std::lock_guard<std::shared_mutex> lk{mtx_value_};
+        std::scoped_lock lk{mtx_value_};
         value_ = value;
     }
 

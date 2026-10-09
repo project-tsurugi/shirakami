@@ -88,7 +88,7 @@ public:
     }
 
     void set_value(std::string_view const v) {
-        std::lock_guard<std::shared_mutex> lock{get_mtx_value()};
+        std::scoped_lock lock{get_mtx_value()};
         get_latest()->set_value(v);
     }
 
