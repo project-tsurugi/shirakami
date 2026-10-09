@@ -59,7 +59,7 @@ public:
 
     [[nodiscard]] tid_word const& get_tidw_ref() const { return tidw_; }
 
-    void get_value(std::string& out) {
+    void get_value(std::string& out) const {
         get_latest()->get_value(out);
     }
 
