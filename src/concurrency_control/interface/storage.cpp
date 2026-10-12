@@ -134,6 +134,16 @@ Status create_storage(std::string_view key, Storage& storage,
     return ret;
 }
 
+Status create_storage(Token token, std::string_view key, Storage& storage,
+                      storage_option const& options) {
+    shirakami_log_entry << "create_storage," shirakami_binstring(key) ", options: " << options << ", token: " << token;
+    // XXX: under development, simply ignores token
+    // TODO: implement
+    auto ret = create_storage_body(key, storage, options);
+    shirakami_log_exit << "create_storage, Status: " << ret << ", storage: " << storage;
+    return ret;
+}
+
 static Status delete_storage_body(Storage const storage) {
     std::scoped_lock lk{storage::get_mtx_key_handle_map()};
     auto ret = storage::delete_storage(storage);

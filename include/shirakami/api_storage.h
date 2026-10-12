@@ -28,6 +28,12 @@ Status create_storage(std::string_view key, Storage& storage,
                       storage_option const& options = {}); // NOLINT
 
 /**
+ * @brief transactional version of create_storage (under development).
+ */
+Status create_storage(Token token, std::string_view key, Storage& storage,
+                      storage_option const& options = {});
+
+/**
  * @brief delete existing storage and records under the storage.
  * @param[in] storage the storage handle retrieved with create_storage().
  * @return Status::OK if successful.
