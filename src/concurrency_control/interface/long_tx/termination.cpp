@@ -210,6 +210,7 @@ static inline void expose_local_write(
                     rec_ptr->set_tid(ctid);
                 } else {
                     // case: middle of list
+                    // NOLINTNEXTLINE(modernize-type-traits) // clang-tidy 21.1.8 complains
                     auto version_creation = [&wso, ctid](version* pre_ver,
                                                          version* ver) {
                         std::string vb{};
