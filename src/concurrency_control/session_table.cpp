@@ -12,15 +12,11 @@ Status session_table::decide_token(Token& token) { // NOLINT
             bool desired(true);
             if (itr.cas_visible(expected, desired)) {
                 token = static_cast<void*>(&itr);
-                break;
+                return Status::OK;
             }
         }
-        if (&itr == get_session_table().end() - 1) {
-            return Status::ERR_SESSION_LIMIT;
-        }
     }
-
-    return Status::OK;
+    return Status::ERR_SESSION_LIMIT;
 }
 
 void session_table::init_session_table() {

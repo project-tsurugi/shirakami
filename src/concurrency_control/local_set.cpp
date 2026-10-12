@@ -11,7 +11,7 @@
 namespace shirakami {
 
 Status local_write_set::erase(write_set_obj* wso) {
-    std::lock_guard<std::shared_mutex> lk{get_mtx()};
+    std::scoped_lock lk{get_mtx()};
 
     if (for_batch_) {
         auto result = get_ref_cont_for_bt().find(wso->get_rec_ptr());
@@ -31,7 +31,7 @@ Status local_write_set::erase(write_set_obj* wso) {
 }
 
 void local_write_set::push(Token token, write_set_obj&& elem) {
-    std::lock_guard<std::shared_mutex> lk{get_mtx()};
+    std::scoped_lock lk{get_mtx()};
 
     if (get_for_batch()) {
         if (static_cast<session*>(token)->get_tx_type() ==
@@ -89,7 +89,7 @@ write_set_obj* local_write_set::search(Record const* const rec_ptr) {
 
 void local_write_set::sort_if_ol() {
     if (for_batch_) return;
-    std::lock_guard<std::shared_mutex> lk{get_mtx()};
+    std::scoped_lock lk{get_mtx()};
     std::sort(cont_for_occ_.begin(), cont_for_occ_.end());
 }
 

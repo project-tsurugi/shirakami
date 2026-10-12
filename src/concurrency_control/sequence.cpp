@@ -3,6 +3,7 @@
  */
 
 #include <algorithm>
+#include <mutex>
 #include <tuple>
 
 #include "sequence.h"
@@ -253,7 +254,7 @@ Status sequence::create_sequence(SequenceId* id) {
      * critical section, the timestamp ordering of updates and logging can be
      * confused with other concurrent operations.
      */
-    std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+    std::scoped_lock lk{sequence::sequence_map_smtx()};
 
     // gc after write lock
     sequence::gc_sequence_map();
@@ -369,7 +370,7 @@ Status sequence::delete_sequence(SequenceId const id) {
      * critical section, the timestamp ordering of updates and logging can be
      * confused with other concurrent operations.
      */
-    std::lock_guard<std::shared_mutex> lk{sequence::sequence_map_smtx()};
+    std::scoped_lock lk{sequence::sequence_map_smtx()};
 
     // gc after write lock
     sequence::gc_sequence_map();

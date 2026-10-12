@@ -48,6 +48,7 @@ readability-*,\
 -readability-named-parameter,\
 -readability-redundant-inline-specifier,\
 -readability-redundant-member-init,\
+-readability-use-concise-preprocessor-directives,\
 "
 CheckOptions:
   - key: readability-implicit-bool-conversion.AllowPointerConditions

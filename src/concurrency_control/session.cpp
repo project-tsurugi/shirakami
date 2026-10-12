@@ -45,7 +45,7 @@ void session::commit_sequence(tid_word ctid) {
     // ss is sequence set
     if (ss.empty()) { return; }
 
-    std::lock_guard<std::shared_mutex> lk_for_sm{sequence::sequence_map_smtx()};
+    std::scoped_lock lk_for_sm{sequence::sequence_map_smtx()};
 
     // gc after write lock
     sequence::gc_sequence_map();

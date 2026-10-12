@@ -6,6 +6,7 @@
 
 #include <iterator>
 #include <map>
+#include <mutex>
 #include <shared_mutex>
 #include <sstream>
 #include <string_view>
@@ -299,13 +300,13 @@ public:
 
     void clear() {
         // take write lock
-        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
+        std::scoped_lock lk{get_mtx_set()};
         set_.clear();
     }
 
     void push(Record* rec) {
         // take write lock
-        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
+        std::scoped_lock lk{get_mtx_set()};
         set_.insert(rec);
     }
 
@@ -324,12 +325,12 @@ public:
                                            yakushima::node_version64*>>;
 
     auto clear() {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
+        std::scoped_lock lk{get_mtx_set()};
         return get_set().clear();
     }
 
     Status update_node_set(yakushima::node_version64* nvp, yakushima::node_version64_body& out_nvb) {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
+        std::scoped_lock lk{get_mtx_set()};
         bool found = false;
         for (auto&& elem : set_) {
             // compare node version ptr
@@ -363,7 +364,7 @@ public:
                                   yakushima::node_version64*>
                                 elem) {
         // take write lock
-        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
+        std::scoped_lock lk{get_mtx_set()};
         // engineering optimization, shrink nvec size.
         if (!get_set().empty() &&       // not empty
             get_set().back() == elem) { // last elem is same
@@ -475,12 +476,12 @@ public:
     set_type& get_set() { return set_; }
 
     void clear() {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
+        std::scoped_lock lk{get_mtx_set()};
         set_.clear();
     }
 
     void insert(elem_type const& elem) {
-        std::lock_guard<std::shared_mutex> lk{get_mtx_set()};
+        std::scoped_lock lk{get_mtx_set()};
         set_.insert(elem);
     }
 

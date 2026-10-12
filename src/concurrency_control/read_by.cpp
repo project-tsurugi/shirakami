@@ -36,7 +36,7 @@ bool point_read_by_long::is_exist(Token token) {
 
 void point_read_by_long::push(body_elem_type const elem) {
     // lock
-    std::lock_guard<std::shared_mutex> lk(mtx_);
+    std::scoped_lock lk{mtx_};
 
     // prepare
     const auto ce = epoch::get_global_epoch();

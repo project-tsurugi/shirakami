@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2024 tsurugi project.
+ * Copyright 2018-2026 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ public:
             auto c = *(static_cast<std::uint8_t const*>(value.ptr_) + // NOLINT
                        idx);
             if (std::isprint(c) != 0) {
-                out << c;
+                out << static_cast<char>(c);
             } else {
                 out << std::string_view("\\x");
                 out << std::hex << std::setw(2) << std::setfill('0')
