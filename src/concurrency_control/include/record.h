@@ -47,7 +47,7 @@ public:
 
     [[nodiscard]] std::string_view get_key_view() const { return key_; }
 
-    [[nodiscard]] version* get_latest() const {
+    [[nodiscard]] version* get_latest() {
         return latest_.load(std::memory_order_acquire);
     }
 
