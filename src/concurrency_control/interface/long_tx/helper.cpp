@@ -297,9 +297,8 @@ void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
         if (l_key < std::get<0>(read_range)) {
             std::get<0>(read_range) = l_key;
         }
-        if (l_end == scan_endpoint::INF || // l_end is strongest or
-            std::get<1>(read_range) ==     // is weakest
-                    scan_endpoint::EXCLUSIVE) {
+        if (l_end == scan_endpoint::INF ||                         // l_end is strongest or
+            std::get<1>(read_range) == scan_endpoint::EXCLUSIVE) { // old l_end is weakest
             std::get<1>(read_range) = l_end;
         }
     }

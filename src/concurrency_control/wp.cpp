@@ -34,10 +34,7 @@ void extract_higher_priori_ltx_info(session* const ti,
          * If this is the first forwarding against this table,
          * initialize read range.
          */
-        auto& target_set =
-                std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-        auto& read_range =
-                std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
+        auto& [target_set, read_range] = ti->get_overtaken_ltx_set()[wp_meta_ptr];
         if (target_set.empty() || !std::get<4>(read_range)) {
             // initialize read range
             std::get<0>(read_range) = key;
