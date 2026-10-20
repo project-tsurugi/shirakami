@@ -23,14 +23,14 @@ public:
     auto& get_vec() { return vec_; }
     [[nodiscard]] std::size_t get_scan_index() const { return scan_index_; }
     std::size_t& get_scan_index_ref() { return scan_index_; }
-    [[nodiscard]] std::string_view get_r_key() const { return r_key_; }
-    [[nodiscard]] scan_endpoint get_r_end() const { return r_end_; }
+    [[nodiscard]] std::string_view get_end_key() const { return end_key_; }
+    [[nodiscard]] scan_endpoint get_end_kind() const { return end_kind_; }
     [[nodiscard]] scan_handler* get_parent() const { return parent_; }
 
     // setter
     void set_storage(Storage storage) { storage_ = storage; }
-    void set_r_key(std::string_view r_key) { r_key_ = r_key; }
-    void set_r_end(scan_endpoint r_end) { r_end_ = r_end; }
+    void set_end_key(std::string_view end_key) { end_key_ = end_key; }
+    void set_end_kind(scan_endpoint end_kind) { end_kind_ = end_kind; }
     void set_parent(scan_handler* parent) { parent_ = parent; }
 
 private:
@@ -41,13 +41,13 @@ private:
     std::size_t scan_index_{0U};
 
     /**
-     * @brief range of right endpoint for ltx
-     * @details if user read to right endpoint till scan limit, shirakami needs
+     * @brief range of scan end point for ltx
+     * @details if user has finished reading the entire scan range, shirakami needs
      * to know this information to log range info.
      */
-    std::string r_key_{};
+    std::string end_key_{};
 
-    scan_endpoint r_end_{};
+    scan_endpoint end_kind_{};
 
     /**
      * @brief scan_handler that allocated this
@@ -75,16 +75,16 @@ public:
     [[nodiscard]] std::size_t get_max_size() const { return max_size_; }
     yakushima::iscan_context*& get_ycontext_ref() { return ycontext_; }
     Record*& get_rec_ptr_ref() { return rec_ptr_; }
-    [[nodiscard]] std::string_view get_r_key() const { return r_key_; }
-    [[nodiscard]] scan_endpoint get_r_end() const { return r_end_; }
+    [[nodiscard]] std::string_view get_end_key() const { return end_key_; }
+    [[nodiscard]] scan_endpoint get_end_kind() const { return end_kind_; }
     [[nodiscard]] scan_handler* get_parent() const { return parent_; }
 
     // setter
     void set_storage(Storage storage) { storage_ = storage; }
     void set_error(Status error) { error_ = error; }
     void set_max_size(std::size_t max_size) { max_size_ = max_size; }
-    void set_r_key(std::string_view r_key) { r_key_ = r_key; }
-    void set_r_end(scan_endpoint r_end) { r_end_ = r_end; }
+    void set_end_key(std::string_view end_key) { end_key_ = end_key; }
+    void set_end_kind(scan_endpoint end_kind) { end_kind_ = end_kind; }
     void set_parent(scan_handler* parent) { parent_ = parent; }
 
 private:
@@ -101,13 +101,13 @@ private:
     Status error_{Status::OK};
 
     /**
-     * @brief range of right endpoint for ltx
-     * @details if user read to right endpoint till scan limit, shirakami needs
+     * @brief range of scan end point for ltx
+     * @details if user has finished reading the entire scan range, shirakami needs
      * to know this information to log range info.
      */
-    std::string r_key_{};
+    std::string end_key_{};
 
-    scan_endpoint r_end_{};
+    scan_endpoint end_kind_{};
 
     /**
      * @brief scan_handler that allocated this
