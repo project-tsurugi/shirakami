@@ -475,10 +475,7 @@ public:
                     st, std::make_tuple(key, scan_endpoint::INCLUSIVE, key,
                                         scan_endpoint::INCLUSIVE));
         } else {
-            std::string& now_lkey = std::get<0>(itr->second);
-            scan_endpoint& now_lpoint = std::get<1>(itr->second);
-            std::string& now_rkey = std::get<2>(itr->second);
-            scan_endpoint& now_rpoint = std::get<3>(itr->second);
+            auto& [now_lkey, now_lpoint, now_rkey, now_rpoint] = itr->second;
 
             // check initialize
             if (now_lkey.empty() && now_lpoint == scan_endpoint::EXCLUSIVE &&
