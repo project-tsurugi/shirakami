@@ -34,10 +34,7 @@ void extract_higher_priori_ltx_info(session* const ti,
          * If this is the first forwarding against this table,
          * initialize read range.
          */
-        auto& target_set =
-                std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-        auto& read_range =
-                std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
+        auto& [target_set, read_range] = ti->get_overtaken_ltx_set()[wp_meta_ptr];
         if (target_set.empty() || !std::get<4>(read_range)) {
             // initialize read range
             std::get<0>(read_range) = key;
@@ -74,13 +71,9 @@ void extract_higher_priori_ltx_info(session* const ti,
         for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
              wp_result_itr != wp_meta_ptr->get_wp_result_set().end();
              ++wp_result_itr) {
-            auto wp_result_id =
-                    wp::wp_meta::wp_result_elem_extract_id((*wp_result_itr));
-            auto wp_result_was_committed =
-                    wp::wp_meta::wp_result_elem_extract_was_committed(
-                            (*wp_result_itr));
-            auto wp_result_epoch =
-                    wp::wp_meta::wp_result_elem_extract_epoch((*wp_result_itr));
+            auto wp_result_id = wp::wp_meta::wp_result_elem_extract_id((*wp_result_itr));
+            auto wp_result_was_committed = wp::wp_meta::wp_result_elem_extract_was_committed((*wp_result_itr));
+            auto wp_result_epoch = wp::wp_meta::wp_result_elem_extract_epoch((*wp_result_itr));
             if (ti->get_long_tx_id() > wp_result_id &&
                 wp_result_was_committed &&
                 ti->get_valid_epoch() == wp_result_epoch) {
@@ -104,8 +97,7 @@ void extract_higher_priori_ltx_info(session* const ti,
          * If this is the first forwarding against this table,
          * initialize read range.
          */
-        auto& target_set =
-                std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
+        auto& target_set = std::get<0>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
         target_set.insert(against_id);
     };
 
@@ -126,13 +118,9 @@ void extract_higher_priori_ltx_info(session* const ti,
         for (auto&& wp_result_itr = wp_meta_ptr->get_wp_result_set().begin();
              wp_result_itr != wp_meta_ptr->get_wp_result_set().end();
              ++wp_result_itr) {
-            auto wp_result_id =
-                    wp::wp_meta::wp_result_elem_extract_id((*wp_result_itr));
-            auto wp_result_was_committed =
-                    wp::wp_meta::wp_result_elem_extract_was_committed(
-                            (*wp_result_itr));
-            auto wp_result_epoch =
-                    wp::wp_meta::wp_result_elem_extract_epoch((*wp_result_itr));
+            auto wp_result_id = wp::wp_meta::wp_result_elem_extract_id((*wp_result_itr));
+            auto wp_result_was_committed = wp::wp_meta::wp_result_elem_extract_was_committed((*wp_result_itr));
+            auto wp_result_epoch = wp::wp_meta::wp_result_elem_extract_epoch((*wp_result_itr));
             if (ti->get_long_tx_id() > wp_result_id &&
                 wp_result_was_committed &&
                 ti->get_valid_epoch() == wp_result_epoch) {

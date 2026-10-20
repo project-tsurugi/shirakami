@@ -84,9 +84,7 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
             return Status::WARN_STORAGE_NOT_FOUND;
         }
         // update local read range
-        std::string key_buf{};
-        rec_ptr->get_key(key_buf);
-        long_tx::update_local_read_range(ti, wp_meta_ptr, key_buf);
+        long_tx::update_local_read_range(ti, wp_meta_ptr, rec_ptr->get_key_view());
     }
 
     /**
