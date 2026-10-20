@@ -45,6 +45,7 @@ public:
      * overtaken ltxs, read information compressed to range information,
      * 1: left key, 2: left point info, 3: right key, 4: right point info, 5:
      * whether it is initialize.
+     * last bool entry is redundant (= !set.empty()).
      */
     using overtaken_ltx_set_type =
             std::map<wp::wp_meta*,
