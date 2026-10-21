@@ -56,10 +56,14 @@ TEST_F(long_update_local_read_range_test, simple1) {
     wp::wp_meta* wp_meta_ptr{};
     ASSERT_OK(wp::find_wp_meta(st, wp_meta_ptr));
 
-    long_tx::update_local_read_range(ti, wp_meta_ptr, "a", scan_endpoint::INCLUSIVE, "b", scan_endpoint::INCLUSIVE);
-    EXPECT_RANGE_EQ(ti, wp_meta_ptr, "a", scan_endpoint::INCLUSIVE, "b", scan_endpoint::INCLUSIVE);
     long_tx::update_local_read_range(ti, wp_meta_ptr, "b", scan_endpoint::INCLUSIVE, "c", scan_endpoint::INCLUSIVE);
-    EXPECT_RANGE_EQ(ti, wp_meta_ptr, "a", scan_endpoint::INCLUSIVE, "c", scan_endpoint::INCLUSIVE);
+    EXPECT_RANGE_EQ(ti, wp_meta_ptr, "b", scan_endpoint::INCLUSIVE, "c", scan_endpoint::INCLUSIVE);
+    // append to right
+    long_tx::update_local_read_range(ti, wp_meta_ptr, "c", scan_endpoint::INCLUSIVE, "d", scan_endpoint::INCLUSIVE);
+    EXPECT_RANGE_EQ(ti, wp_meta_ptr, "b", scan_endpoint::INCLUSIVE, "d", scan_endpoint::INCLUSIVE);
+    // append to left
+    long_tx::update_local_read_range(ti, wp_meta_ptr, "a", scan_endpoint::INCLUSIVE, "b", scan_endpoint::INCLUSIVE);
+    EXPECT_RANGE_EQ(ti, wp_meta_ptr, "a", scan_endpoint::INCLUSIVE, "d", scan_endpoint::INCLUSIVE);
 
     ASSERT_OK(abort(s));
     ASSERT_OK(leave(s));
