@@ -35,7 +35,15 @@ private:
     static inline std::once_flag init_google;
 };
 
-TEST_F(long_update_local_read_range_test, tx_begin_wp_existing_storage) {
+#define EXPECT_RANGE_EQ(ti, wp_meta_ptr, l_key, l_end, r_key, r_end) do { \
+        auto range_read = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]); \
+        EXPECT_EQ(std::get<0>(range_read), l_key); \
+        EXPECT_EQ(std::get<1>(range_read), l_end); \
+        EXPECT_EQ(std::get<2>(range_read), r_key); \
+        EXPECT_EQ(std::get<3>(range_read), r_end); \
+    } while (false)
+
+TEST_F(long_update_local_read_range_test, simple1) {
     Token s{};
     ASSERT_OK(enter(s));
     Storage st{};
@@ -49,13 +57,9 @@ TEST_F(long_update_local_read_range_test, tx_begin_wp_existing_storage) {
     ASSERT_OK(wp::find_wp_meta(st, wp_meta_ptr));
 
     long_tx::update_local_read_range(ti, wp_meta_ptr, "a", scan_endpoint::INCLUSIVE, "b", scan_endpoint::INCLUSIVE);
+    EXPECT_RANGE_EQ(ti, wp_meta_ptr, "a", scan_endpoint::INCLUSIVE, "b", scan_endpoint::INCLUSIVE);
     long_tx::update_local_read_range(ti, wp_meta_ptr, "b", scan_endpoint::INCLUSIVE, "c", scan_endpoint::INCLUSIVE);
-
-    auto range_read = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-    ASSERT_EQ(std::get<0>(range_read), "a");
-    ASSERT_EQ(std::get<1>(range_read), scan_endpoint::INCLUSIVE);
-    ASSERT_EQ(std::get<2>(range_read), "c");
-    ASSERT_EQ(std::get<3>(range_read), scan_endpoint::INCLUSIVE);
+    EXPECT_RANGE_EQ(ti, wp_meta_ptr, "a", scan_endpoint::INCLUSIVE, "c", scan_endpoint::INCLUSIVE);
 
     ASSERT_OK(abort(s));
     ASSERT_OK(leave(s));
