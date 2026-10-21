@@ -283,30 +283,6 @@ void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
 }
 
 void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
-                             std::string_view l_key, scan_endpoint l_end) {
-    // get mutex
-    std::scoped_lock lk{ti->get_mtx_overtaken_ltx_set()};
-
-    auto& read_range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-    if (!std::get<4>(read_range)) {
-        // it was not initialized
-        std::get<0>(read_range) = l_key;
-        std::get<1>(read_range) = l_end;
-        std::get<2>(read_range) = l_key;
-        std::get<3>(read_range) = scan_endpoint::INCLUSIVE;
-        std::get<4>(read_range) = true;
-    } else {
-        if (l_key < std::get<0>(read_range)) {
-            std::get<0>(read_range) = l_key;
-        }
-        if (l_end == scan_endpoint::INF ||                         // l_end is strongest or
-            std::get<1>(read_range) == scan_endpoint::EXCLUSIVE) { // old l_end is weakest
-            std::get<1>(read_range) = l_end;
-        }
-    }
-}
-
-void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
                              std::string_view l_key, scan_endpoint l_end,
                              std::string_view r_key, scan_endpoint r_end) {
     // get mutex
