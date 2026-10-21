@@ -22,7 +22,7 @@
 namespace shirakami {
 
 static Status next_check_not_found(session*, Storage, Record*);
-static void check_ltx_scan_range_rp_and_log(session*, Storage, std::string_view, scan_endpoint);
+static void check_ltx_scan_range_rp_and_log(session*, Storage, std::string_view, scan_endpoint, std::string_view, scan_endpoint);
 
 static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
@@ -48,7 +48,12 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
         if (scan_buf.size() <= scan_index) {
             scan_index = scan_buf.size(); // stop at scan_buf.size
             if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-                check_ltx_scan_range_rp_and_log(ti, st, sc->get_r_key(), sc->get_r_end());
+                auto last_key_view = std::get<0>(scan_buf.back())->get_key_view();
+                if (sc->get_right_to_left()) {
+                    check_ltx_scan_range_rp_and_log(ti, st, sc->get_end_key(), sc->get_end_kind(), last_key_view, scan_endpoint::INCLUSIVE);
+                } else {
+                    check_ltx_scan_range_rp_and_log(ti, st, last_key_view, scan_endpoint::INCLUSIVE, sc->get_end_key(), sc->get_end_kind());
+                }
             }
             return Status::WARN_SCAN_LIMIT;
         }
@@ -110,9 +115,14 @@ static Status next_body_iscan(Token const token, ScanHandle const handle) { // N
             break;
         }
         if (yrc == yakushima::status::OK_SCAN_END) {
+            Record* rec_ptr = sc->get_rec_ptr_ref();
             sc->set_max_size(scan_index);
             if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-                check_ltx_scan_range_rp_and_log(ti, st, sc->get_r_key(), sc->get_r_end());
+                if (sc->get_right_to_left()) {
+                    check_ltx_scan_range_rp_and_log(ti, st, sc->get_end_key(), sc->get_end_kind(), rec_ptr->get_key_view(), scan_endpoint::INCLUSIVE);
+                } else {
+                    check_ltx_scan_range_rp_and_log(ti, st, rec_ptr->get_key_view(), scan_endpoint::INCLUSIVE, sc->get_end_key(), sc->get_end_kind());
+                }
             }
             return Status::WARN_SCAN_LIMIT;
         }
@@ -236,7 +246,7 @@ static Status next_check_not_found(session* ti, Storage st, Record* rec_ptr) {
  * @pre This is called by only long tx mode
  * @brief register right end point info
  */
-static void check_ltx_scan_range_rp_and_log(session* ti, Storage st, std::string_view r_key, scan_endpoint r_end) {
+static void check_ltx_scan_range_rp_and_log(session* ti, Storage st, std::string_view l_key, scan_endpoint l_end, std::string_view r_key, scan_endpoint r_end) {
     // log full scan
     // get storage info
     wp::wp_meta* wp_meta_ptr{};
@@ -244,18 +254,7 @@ static void check_ltx_scan_range_rp_and_log(session* ti, Storage st, std::string
         // todo special case. interrupt DDL
         return;
     }
-    {
-        std::scoped_lock lk{ti->get_mtx_overtaken_ltx_set()};
-
-        auto& read_range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-        if (std::get<2>(read_range) < r_key) {
-            std::get<2>(read_range) = r_key;
-        }
-        // conside only inf
-        if (r_end == scan_endpoint::INF) {
-            std::get<3>(read_range) = scan_endpoint::INF;
-        }
-    }
+    long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end, r_key, r_end);
 }
 
 Status next(Token const token, ScanHandle const handle) { // NOLINT

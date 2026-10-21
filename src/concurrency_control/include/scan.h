@@ -26,6 +26,7 @@ public:
     [[nodiscard]] std::string_view get_end_key() const { return end_key_; }
     [[nodiscard]] scan_endpoint get_end_kind() const { return end_kind_; }
     [[nodiscard]] scan_handler* get_parent() const { return parent_; }
+    [[nodiscard]] bool get_right_to_left() const { return right_to_left_; }
 
     // setter
     void set_storage(Storage storage) { storage_ = storage; }
@@ -48,6 +49,8 @@ private:
     std::string end_key_{};
 
     scan_endpoint end_kind_{};
+
+    bool right_to_left_{};
 
     /**
      * @brief scan_handler that allocated this
@@ -78,6 +81,7 @@ public:
     [[nodiscard]] std::string_view get_end_key() const { return end_key_; }
     [[nodiscard]] scan_endpoint get_end_kind() const { return end_kind_; }
     [[nodiscard]] scan_handler* get_parent() const { return parent_; }
+    [[nodiscard]] bool get_right_to_left() const { return ycontext_->get_right_to_left(); }
 
     // setter
     void set_storage(Storage storage) { storage_ = storage; }
