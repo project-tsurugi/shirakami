@@ -73,31 +73,35 @@ public:
     [[nodiscard]] Storage get_storage() const { return storage_; }
     [[nodiscard]] std::size_t get_scan_index() const { return scan_index_; }
     std::size_t& get_scan_index_ref() { return scan_index_; }
-    [[nodiscard]] std::string_view get_r_key() const { return r_key_; }
-    [[nodiscard]] scan_endpoint get_r_end() const { return r_end_; }
+    [[nodiscard]] std::string_view get_end_key() const { return end_key_; }
+    [[nodiscard]] scan_endpoint get_end_kind() const { return end_kind_; }
     [[nodiscard]] scan_handler* get_parent() const { return parent_; }
+    [[nodiscard]] bool get_right_to_left() const { return right_to_left_; }
     [[nodiscard]] bool is_iscan() const { return std::holds_alternative<scan_context_iscan>(var_); }
     scan_context_vscan& get_context_vscan_ref() { return std::get<scan_context_vscan>(var_); }
     scan_context_iscan& get_context_iscan_ref() { return std::get<scan_context_iscan>(var_); }
 
     // setter
     void set_storage(Storage storage) { storage_ = storage; }
-    void set_r_key(std::string_view r_key) { r_key_ = r_key; }
-    void set_r_end(scan_endpoint r_end) { r_end_ = r_end; }
+    void set_end_key(std::string_view end_key) { end_key_ = end_key; }
+    void set_end_kind(scan_endpoint end_kind) { end_kind_ = end_kind; }
     void set_parent(scan_handler* parent) { parent_ = parent; }
+    void set_right_to_left(bool right_to_left) { right_to_left_ = right_to_left; }
 
 private:
     Storage storage_{};
     std::size_t scan_index_{0U};
 
     /**
-     * @brief range of right endpoint for ltx
-     * @details if user read to right endpoint till scan limit, shirakami needs
+     * @brief range of scan end point for ltx
+     * @details if user has finished reading the entire scan range, shirakami needs
      * to know this information to log range info.
      */
-    std::string r_key_{};
+    std::string end_key_{};
 
-    scan_endpoint r_end_{};
+    scan_endpoint end_kind_{};
+
+    bool right_to_left_{};
 
     /**
      * @brief scan_handler that allocated this

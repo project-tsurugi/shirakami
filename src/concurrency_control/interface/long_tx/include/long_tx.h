@@ -80,11 +80,6 @@ wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr,
                                                      std::string_view key);
 
 // for ltx scan
-[[maybe_unused]] extern void update_local_read_range(session* ti,
-                                                     wp::wp_meta* wp_meta_ptr,
-                                                     std::string_view l_key,
-                                                     scan_endpoint l_end);
-
 [[maybe_unused]] extern void
 update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
                         std::string_view l_key, scan_endpoint l_end,

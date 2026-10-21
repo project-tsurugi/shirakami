@@ -268,38 +268,16 @@ void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
         std::get<4>(read_range) = true;
     } else {
         // it was initialized
-        if (key < std::get<0>(read_range)) {
+        if (key < std::get<0>(read_range)) { // XXX: K + K:EXCLUSIVE should be K:INCLUSIVE
             if (std::get<1>(read_range) == scan_endpoint::EXCLUSIVE) {
                 std::get<1>(read_range) = scan_endpoint::INCLUSIVE;
             }
             std::get<0>(read_range) = key;
-        } else if (key > std::get<2>(read_range)) {
+        } else if (key > std::get<2>(read_range)) { // XXX: K:EXCLUSIVE + K should be K:INCLUSIVE
             if (std::get<3>(read_range) == scan_endpoint::EXCLUSIVE) {
                 std::get<3>(read_range) = scan_endpoint::INCLUSIVE;
             }
             std::get<2>(read_range) = key;
-        }
-    }
-}
-
-void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
-                             std::string_view l_key, scan_endpoint l_end) {
-    // get mutex
-    std::scoped_lock lk{ti->get_mtx_overtaken_ltx_set()};
-
-    auto& read_range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-    if (!std::get<4>(read_range)) {
-        // it was not initialized
-        std::get<0>(read_range) = l_key;
-        std::get<1>(read_range) = l_end;
-        std::get<4>(read_range) = true;
-    } else {
-        if (l_key < std::get<0>(read_range)) {
-            std::get<0>(read_range) = l_key;
-        }
-        if (l_end == scan_endpoint::INF ||                         // l_end is strongest or
-            std::get<1>(read_range) == scan_endpoint::EXCLUSIVE) { // old l_end is weakest
-            std::get<1>(read_range) = l_end;
         }
     }
 }
@@ -319,14 +297,33 @@ void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
         std::get<2>(read_range) = r_key;
         std::get<3>(read_range) = r_end;
     } else {
-        if (l_key < std::get<0>(read_range)) {
-            std::get<0>(read_range) = l_key;
+        if (std::get<1>(read_range) == scan_endpoint::INF) {
+            // nothing to update
+        } else if (l_end == scan_endpoint::INF) {
+            std::get<0>(read_range) = "";
+            std::get<1>(read_range) = scan_endpoint::INF;
+        } else {
+            int cmp = l_key.compare(std::get<0>(read_range));
+            if (cmp < 0) {
+                std::get<0>(read_range) = l_key;
+                std::get<1>(read_range) = l_end;
+            } else if (cmp == 0 && l_end == scan_endpoint::INCLUSIVE) {
+                std::get<1>(read_range) = scan_endpoint::INCLUSIVE;
+            }
         }
-        if (l_end == scan_endpoint::INF) { std::get<1>(read_range) = l_end; }
-        if (std::get<2>(read_range) < r_key) {
-            std::get<2>(read_range) = r_key;
+        if (std::get<3>(read_range) == scan_endpoint::INF) {
+            // nothing to update
+        } else if (r_end == scan_endpoint::INF) {
+            std::get<3>(read_range) = scan_endpoint::INF;
+        } else {
+            int cmp = std::get<2>(read_range).compare(r_key);
+            if (cmp < 0) {
+                std::get<2>(read_range) = r_key;
+                std::get<3>(read_range) = r_end;
+            } else if (cmp == 0 && r_end == scan_endpoint::INCLUSIVE) {
+                std::get<3>(read_range) = scan_endpoint::INCLUSIVE;
+            }
         }
-        if (r_end == scan_endpoint::INF) { std::get<3>(read_range) = r_end; }
     }
 }
 
