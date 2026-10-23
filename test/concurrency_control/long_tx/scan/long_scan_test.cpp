@@ -1,5 +1,6 @@
 
 #include <mutex>
+#include <string_view>
 
 #include "test_tool.h"
 
@@ -17,6 +18,7 @@
 namespace shirakami::testing {
 
 using namespace shirakami;
+using namespace std::literals;
 
 class long_scan_test : public ::testing::Test { // NOLINT
 
@@ -252,6 +254,53 @@ TEST_F(long_scan_test,                                     // NOLINT
     // clean up test
     ASSERT_EQ(leave(s), Status::OK);
     ASSERT_EQ(leave(s2), Status::OK);
+}
+
+#define EXPECT_RANGE_EQ(ti, wp_meta_ptr, l_key, l_end, r_key, r_end) do { \
+        auto range_read = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]); \
+        if (l_key != "***"sv) { EXPECT_EQ(std::get<0>(range_read), l_key); } \
+        EXPECT_EQ(std::get<1>(range_read), l_end); \
+        if (r_key != "***"sv) { EXPECT_EQ(std::get<2>(range_read), r_key); } \
+        EXPECT_EQ(std::get<3>(range_read), r_end); \
+    } while (false)
+
+TEST_F(long_scan_test, scan_read_range_normal) {
+    // prepare test
+    Storage st{};
+    ASSERT_OK(create_storage("", st));
+    Token s{};
+    ASSERT_OK(enter(s));
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(upsert(s, st, "1", ""));
+    ASSERT_OK(upsert(s, st, "2", ""));
+    ASSERT_OK(upsert(s, st, "3", ""));
+    ASSERT_OK(commit(s));
+
+    // test
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    auto* ti = static_cast<session*>(s);
+    wait_epoch_update();
+    wp::wp_meta* wp_meta_ptr{};
+    ASSERT_OK(wp::find_wp_meta(st, wp_meta_ptr));
+    ScanHandle hd{};
+    ASSERT_OK(open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF, hd));
+    std::string vb{};
+    ASSERT_OK(read_key_from_scan(s, hd, vb));
+    ASSERT_EQ(vb, "1");
+    EXPECT_RANGE_EQ(ti, wp_meta_ptr, "***", scan_endpoint::INF, "1", scan_endpoint::INCLUSIVE);
+    ASSERT_OK(next(s, hd));
+    ASSERT_OK(read_key_from_scan(s, hd, vb));
+    ASSERT_EQ(vb, "2");
+    EXPECT_RANGE_EQ(ti, wp_meta_ptr, "***", scan_endpoint::INF, "2", scan_endpoint::INCLUSIVE);
+    ASSERT_OK(next(s, hd));
+    ASSERT_OK(read_key_from_scan(s, hd, vb));
+    ASSERT_EQ(vb, "3");
+    EXPECT_RANGE_EQ(ti, wp_meta_ptr, "***", scan_endpoint::INF, "3", scan_endpoint::INCLUSIVE);
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
+    EXPECT_RANGE_EQ(ti, wp_meta_ptr, "***", scan_endpoint::INF, "***", scan_endpoint::INF);
+
+    // clean up test
+    ASSERT_EQ(leave(s), Status::OK);
 }
 
 } // namespace shirakami::testing
