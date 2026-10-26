@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 tsurugi project.
+ * Copyright 2019-2026 tsurugi project.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ DEFINE_uint64( // NOLINT
         "# cpu MHz of execution environment. It is used measuring some "
         "time.");
 DEFINE_uint64(duration, 1, "Duration of benchmark in seconds.");       // NOLINT
-DEFINE_uint64(key_length, 8, "# length of value(payload). min is 8."); // NOLINT
+DEFINE_uint64(key_length, 8, "length of key. min is 8.");
 DEFINE_uint64(ops, 1, "# operations per a transaction.");              // NOLINT
 DEFINE_string(ops_read_type, "point", "type of read operation.");      // NOLINT
 DEFINE_string(ops_write_type, "update", "type of write operation.");   // NOLINT
@@ -62,7 +62,7 @@ DEFINE_uint64(scan_length, 100, "number of records in scan range.");   // NOLINT
 DEFINE_double(skew, 0.0, "access skew of transaction.");               // NOLINT
 DEFINE_uint64(thread, 1, "# worker threads.");                         // NOLINT
 DEFINE_string(transaction_type, "short", "type of transaction.");      // NOLINT
-DEFINE_uint64(val_length, 4, "# length of value(payload).");           // NOLINT
+DEFINE_uint64(val_length, 4, "length of value(payload).");
 DEFINE_uint64(random_seed, 0, "random seed.");
 DEFINE_uint64(epoch_duration, 0, "epoch duration in microseconds");
 
