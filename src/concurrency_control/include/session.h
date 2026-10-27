@@ -520,7 +520,6 @@ public:
     }
 
     void push_to_write_set(write_set_obj&& elem) {
-        std::scoped_lock lk{mtx_write_set_};
         write_set_.push(this, std::move(elem));
     }
 
@@ -793,13 +792,6 @@ private:
      * @brief local write set.
      */
     local_write_set write_set_{};
-
-    /**
-     * @brief mutex for local write set. It is for concurrent access by strand
-     * at read phase so it doesn't need for termination phase due to mutex for
-     * termination.
-     */
-    std::shared_mutex mtx_write_set_;
 
     /**
      * @brief The begin epoch of stx transaction begin used for GC.

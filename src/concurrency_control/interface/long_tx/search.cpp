@@ -121,12 +121,11 @@ static Status check_before_execution(session* const ti, Storage const storage) {
     return Status::OK;
 }
 
-static Status hit_local_write_set(write_set_obj* const in_ws, Record* rec_ptr,
+static Status hit_local_write_set(write_set_obj* const in_ws,
                                   std::string& value, bool const read_value) {
     if (in_ws->get_op() == OP_TYPE::DELETE) { return Status::WARN_NOT_FOUND; }
     if (read_value) {
-        std::shared_lock<std::shared_mutex> lk{rec_ptr->get_mtx_value()};
-        in_ws->get_value(value);
+        in_ws->get_value(value); // TODO: need mutex for write strand
     }
     return Status::OK;
 }
@@ -173,7 +172,7 @@ Status search_key(session* ti, Storage const storage,
     // check local write set
     write_set_obj* in_ws{ti->get_write_set().search(rec_ptr)}; // NOLINT
     if (in_ws != nullptr) {
-        rc = hit_local_write_set(in_ws, rec_ptr, value, read_value);
+        rc = hit_local_write_set(in_ws, value, read_value);
         if (rc == Status::OK) {
             if (in_ws->get_op() != OP_TYPE::UPSERT) {
                 // note: read own upsert don't need to log read info.
