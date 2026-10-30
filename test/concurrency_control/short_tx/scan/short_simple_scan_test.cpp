@@ -61,6 +61,32 @@ TEST_F(simple_scan, scan_with_prefixed_end) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(simple_scan, scan_with_prefixed_end_iscan) {
+    // open_iscan version of scan_with_prefixed_end
+    Storage st{};
+    create_storage("", st);
+    std::string k("T6\000\200\000\000\n\200\000\000\001", 11); // NOLINT
+    std::string end("T6\001", 3);                              // NOLINT
+    std::string v("bbb");                                      // NOLINT
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, upsert(s, st, k, v));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK,
+              tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_iscan(s, st, "", scan_endpoint::INF, end,
+                                     scan_endpoint::EXCLUSIVE, false, hd));
+    while (next(s, hd) == Status::OK) {}
+    std::size_t ssize{};
+    ASSERT_EQ(Status::OK, scannable_total_index_size(s, hd, ssize));
+    ASSERT_EQ(ssize, 1);
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(simple_scan, scan_range_endpoint1) { // NOLINT
     Storage st{};
     create_storage("", st);

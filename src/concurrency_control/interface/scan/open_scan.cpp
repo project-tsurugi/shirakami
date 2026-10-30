@@ -572,4 +572,25 @@ Status open_scan(Token const token, Storage storage, // NOLINT
     return ret;
 }
 
+Status open_iscan(Token const token, Storage storage, // NOLINT
+                  const std::string_view l_key, const scan_endpoint l_end,
+                  const std::string_view r_key, const scan_endpoint r_end,
+                  bool right_to_left, ScanHandle& handle) {
+    shirakami_log_entry << "open_iscan token: " << token << ", storage: " << storage
+                        << "," shirakami_binstring(l_key) ", l_end: " << l_end
+                        << "," shirakami_binstring(r_key) ", r_end: " << r_end
+                        << ", right_to_left: " << right_to_left;
+    auto* ti = static_cast<session*>(token);
+    ti->process_before_start_step();
+    Status ret{};
+    { // for strand
+        std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
+        if (ti->get_mutex_flags().do_readaccess_daterm()) { lock.lock(); }
+        ret = open_scan_body_iscan(token, storage, l_key, l_end, r_key, r_end, handle, 0U, right_to_left);
+    }
+    ti->process_before_finish_step();
+    shirakami_log_exit << "open_iscan, Status: " << ret << ", handle: " << handle;
+    return ret;
+}
+
 } // namespace shirakami
