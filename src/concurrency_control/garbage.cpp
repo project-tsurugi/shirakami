@@ -399,8 +399,12 @@ static inline void unhooking_keys_and_pruning_versions(stats_info_type& stats_in
             auto rc = wp::find_page_set_meta(st, psm);
             if (rc != Status::OK) {
                 if (storage::exist_storage(st) == Status::OK) {
-                    LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unexpected error, Storage " << st
-                                          << " exists, but cannot get page_set_meta of it";
+                    // If storage st is recreated (by executing delete_storage followed by create_storage),
+                    // there is a moment where storage exists but page_set_meta does not.
+                    // This is because storage::register_storage (called from create_storage) creates
+                    // storage first, and then creates page_set_meta.
+                    VLOG(log_debug) << log_location_prefix << "Storage " << st
+                                    << " exists, but cannot get page_set_meta of it";
                 } else {
                     VLOG(log_debug) << log_location_prefix << "Storage " << st << " is not found";
                 }
