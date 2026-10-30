@@ -255,31 +255,7 @@ void wp_verify_and_forwarding(session* ti, wp::wp_meta* wp_meta_ptr) {
 
 void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
                              const std::string_view key) {
-    // get mutex
-    std::scoped_lock lk{ti->get_mtx_overtaken_ltx_set()};
-
-    auto& read_range = std::get<1>(ti->get_overtaken_ltx_set()[wp_meta_ptr]);
-    if (!std::get<4>(read_range)) {
-        // it was not initialized, and point read
-        std::get<0>(read_range) = key;
-        std::get<1>(read_range) = scan_endpoint::INCLUSIVE;
-        std::get<2>(read_range) = key;
-        std::get<3>(read_range) = scan_endpoint::INCLUSIVE;
-        std::get<4>(read_range) = true;
-    } else {
-        // it was initialized
-        if (key < std::get<0>(read_range)) { // XXX: X:EXC に X を追加しても X:EXC のままで X:INC にならない
-            if (std::get<1>(read_range) == scan_endpoint::EXCLUSIVE) {
-                std::get<1>(read_range) = scan_endpoint::INCLUSIVE;
-            }
-            std::get<0>(read_range) = key;
-        } else if (key > std::get<2>(read_range)) { // XXX: X:EXC に X を追加しても X:EXC のままで X:INC にならない
-            if (std::get<3>(read_range) == scan_endpoint::EXCLUSIVE) {
-                std::get<3>(read_range) = scan_endpoint::INCLUSIVE;
-            }
-            std::get<2>(read_range) = key;
-        }
-    }
+    update_local_read_range(ti, wp_meta_ptr, key, scan_endpoint::INCLUSIVE, key, scan_endpoint::INCLUSIVE);
 }
 
 void update_local_read_range(session* ti, wp::wp_meta* wp_meta_ptr,
