@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deque>
 #include <map>
 #include <mutex>
 #include <shared_mutex>
@@ -52,6 +53,59 @@ public:
     void set_error(Status error) { error_ = error; }
     void set_max_size(std::size_t max_size) { max_size_ = max_size; }
 
+    // emulate vscan
+    [[nodiscard]] bool is_prefetched() const { return is_prefetched_; }
+    void set_prefetched(bool b) { is_prefetched_ = b; }
+    class scan_prefetch {
+        union prefetch_elem {
+            size_t num_of_nodes;
+            yakushima::node_version64* nvp;
+            yakushima::node_version64_body nvb;
+            Record* rec_ptr;
+            explicit prefetch_elem(size_t num_of_nodes) : num_of_nodes(num_of_nodes) {};
+            explicit prefetch_elem(yakushima::node_version64_body nvb) : nvb(nvb) {};
+            explicit prefetch_elem(yakushima::node_version64* nvp) : nvp(nvp) {};
+            explicit prefetch_elem(Record* rec_ptr) : rec_ptr(rec_ptr) {};
+        };
+        std::deque<prefetch_elem> data_{};
+public:
+        [[nodiscard]] bool empty() const { return data_.empty(); }
+        bool consume_node_block(const std::function<bool(yakushima::node_version64*, yakushima::node_version64_body)>& cb) {
+            auto ret = data_.front();
+            data_.pop_front();
+            std::size_t num_of_nodes = ret.num_of_nodes;
+            bool fail = false;
+            for (std::size_t i = 0U; i < num_of_nodes; i++) {
+                auto ret1 = data_.front();
+                data_.pop_front();
+                auto ret2 = data_.front();
+                data_.pop_front();
+                if (!fail) {
+                    auto cb_fail = cb(ret1.nvp, ret2.nvb);
+                    fail = cb_fail;
+                }
+            }
+            return fail;
+        }
+        Record* get_and_pop_front_rec_ptr() {
+            auto ret = data_.front();
+            data_.pop_front();
+            return ret.rec_ptr;
+        }
+        std::uint64_t& begin_node_block() {
+            data_.emplace_back(0UL);
+            return data_.back().num_of_nodes;
+        }
+        void push_back_node(yakushima::node_version64_body nvb, yakushima::node_version64* nvp) {
+            data_.emplace_back(nvp);
+            data_.emplace_back(nvb);
+        }
+        void push_back_rec_ptr(Record* rec_ptr) {
+            data_.emplace_back(rec_ptr);
+        }
+    };
+    scan_prefetch& get_scan_prefetch_ref() { return scan_prefetch_; }
+
 private:
     yakushima::iscan_context* ycontext_{nullptr};
     Record* rec_ptr_{};
@@ -62,6 +116,9 @@ private:
      * @details to emulate when vector-based scan returns an error.
      */
     Status error_{Status::OK};
+
+    bool is_prefetched_{false};
+    scan_prefetch scan_prefetch_;
 };
 
 class alignas(CACHE_LINE_SIZE) scan_context {

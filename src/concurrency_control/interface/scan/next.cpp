@@ -236,6 +236,50 @@ static void check_ltx_scan_range_rp_and_log(session* ti, Storage st, std::string
     }
 }
 
+static Status next_iscan_from_prefetch(session* ti, scan_context* sc) {
+    // increment cursor
+    Storage st = sc->get_storage();
+    auto& sci = sc->get_context_iscan_ref();
+    auto& prefetched = sci.get_scan_prefetch_ref();
+    auto occ_cb = [&ti](yakushima::node_version64* nvp, yakushima::node_version64_body nvb) -> bool {
+        auto rc = ti->get_node_set().emplace_back({nvb, nvp});
+        return (rc == Status::ERR_CC);
+    };
+    for (;;) {
+        auto& scan_index = sc->get_scan_index_ref();
+        ++scan_index;
+
+        // check range of cursor
+        if (sci.get_max_size() <= scan_index || prefetched.empty()) {
+            return Status::WARN_SCAN_LIMIT;
+        }
+
+        bool fail = prefetched.consume_node_block(occ_cb); // if not-SHORT, node_block is always empty
+        if (fail) {
+            sci.set_error(Status::ERR_CC);
+            break;
+        }
+        if (prefetched.empty()) { // SCAN_LIMIT
+            sci.set_max_size(scan_index);
+            if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+                check_ltx_scan_range_rp_and_log(ti, st, sc->get_r_key(), sc->get_r_end());
+            }
+            return Status::WARN_SCAN_LIMIT;
+        }
+        Record* rec_ptr = prefetched.get_and_pop_front_rec_ptr();
+        sci.get_rec_ptr_ref() = rec_ptr;
+
+        Status rc = next_check_not_found(ti, st, rec_ptr);
+        if (rc == Status::OK) { break; }
+        if (rc == Status::INTERNAL_WARN_NOT_FOUND) { continue; }
+        return rc;
+    }
+
+    // reset cache in cursor
+    //ti->get_scan_handle().get_ci(handle).reset();
+    return Status::OK;
+}
+
 static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     auto* ti = static_cast<session*>(token);
     auto* sc = static_cast<scan_context*>(handle);
@@ -250,6 +294,8 @@ static Status next_body(Token const token, ScanHandle const handle) { // NOLINT
     // valid handle
 
     if (sc->is_iscan()) {
+        auto& sci = sc->get_context_iscan_ref();
+        if (sci.is_prefetched()) { return next_iscan_from_prefetch(ti, sc); }
         return next_iscan(ti, sc);
     } else { // NOLINT
         return next_vscan(ti, sc);
@@ -268,6 +314,48 @@ Status next(Token const token, ScanHandle const handle) { // NOLINT
     }
     ti->process_before_finish_step();
     shirakami_log_exit << "next, Status: " << ret;
+    return ret;
+}
+
+static Status iscan_prefetch_all_body(Token token, ScanHandle handle, std::size_t max_size) {
+    auto* ti = static_cast<session*>(token);
+    auto* sc = static_cast<scan_context*>(handle);
+    auto& sci = sc->get_context_iscan_ref();
+    // increment cursor
+    auto& prefetched = sci.get_scan_prefetch_ref();
+    sci.set_prefetched(true);
+    for (std::size_t scan_index = 0;;) {
+        // check range of cursor
+        if (++scan_index > max_size) {
+            break;
+        }
+
+        auto& block_head = prefetched.begin_node_block();
+        yakushima::status yrc{};
+        void* value{};
+        if (ti->get_tx_type() == transaction_options::transaction_type::SHORT) {
+            auto occ_cb = [&prefetched, &block_head](yakushima::node_version64* nvp, yakushima::node_version64_body nvb) -> bool {
+                prefetched.push_back_node(nvb, nvp);
+                block_head++;
+                return false;
+            };
+            yrc = yakushima::iscan_next(sci.get_ycontext_ref(), value, occ_cb);
+        } else {
+            yrc = yakushima::iscan_next(sci.get_ycontext_ref(), value);
+        }
+        if (yrc == yakushima::status::OK_SCAN_END) {
+            break;
+        }
+        Record* rec_ptr = reinterpret_cast<Record*>(value); // NOLINT
+        prefetched.push_back_rec_ptr(rec_ptr);
+    }
+    return Status::OK;
+}
+
+Status iscan_prefetch_all(Token token, ScanHandle handle, std::size_t max_size) {
+    shirakami_log_entry << "iscan_prefetch_all, token: " << token << ", handle: " << handle << ", max_size: " << max_size;
+    Status ret = iscan_prefetch_all_body(token, handle, max_size);
+    shirakami_log_exit << "iscan_prefetch_all, Status: " << ret;
     return ret;
 }
 

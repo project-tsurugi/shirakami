@@ -221,4 +221,29 @@ TEST_F(simple_scan, scan_range_endpoint2) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(simple_scan, iscan_limit) {
+    Storage st{};
+    create_storage("", st);
+    Token s{};
+    ASSERT_OK(enter(s));
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(upsert(s, st, "k1", "v"));
+    ASSERT_OK(upsert(s, st, "k2", "v"));
+    ASSERT_OK(upsert(s, st, "k3", "v"));
+    ASSERT_OK(commit(s));
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ScanHandle hd{};
+    ASSERT_OK(open_iscan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF, false, hd));
+    ASSERT_OK(iscan_prefetch_all(s, hd, 1)); // first elem + 1 more elem
+    std::string sb{};
+    ASSERT_OK(read_key_from_scan(s, hd, sb));
+    EXPECT_EQ(sb, "k1");
+    ASSERT_EQ(Status::OK, next(s, hd));
+    ASSERT_OK(read_key_from_scan(s, hd, sb));
+    EXPECT_EQ(sb, "k2");
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd)); // only reads 2 elems
+    ASSERT_OK(commit(s));
+    ASSERT_OK(leave(s));
+}
+
 } // namespace shirakami::testing

@@ -223,6 +223,12 @@ Status insert(Token token, Storage storage,
               );
 
 /**
+ * @brief prefetch all from cursor of iscan
+ * @return Status::OK success
+ */
+Status iscan_prefetch_all(Token token, ScanHandle handle, std::size_t max_size);
+
+/**
  * @brief leave session
  * @details It return the objects which was got at enter function to
  * session_table_.
