@@ -95,7 +95,7 @@ void local_write_set::sort_if_ol() {
 
 // make copy of local_write_set for scan-local cache
 void local_write_set::copy_from(const local_write_set& src, Storage st) {
-    std::lock_guard<std::shared_mutex> lk{get_mtx()};
+    std::scoped_lock lk{get_mtx()};
     for_batch_.store(src.for_batch_.load());
     if (for_batch_) {
         for (auto&& elem : src.cont_for_bt_) {
