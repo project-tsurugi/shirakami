@@ -272,6 +272,37 @@ Status open_scan(Token token, Storage storage, std::string_view l_key,
                  bool right_to_left = false); // NOLINT
 
 /**
+ * @brief start scan and return the scan handle for the specified range.
+ * @details This function preserve the specified range of masstree. If you use ltx
+ * mode, it may log forwarding and read information.
+ * @param[in] token the token retrieved by enter()
+ * @param[in] storage the handle of storage.
+ * @param[in] l_key the left end key of range. This argument is ignored if `l_end` is scan_endpoint::INF.
+ * @param[in] l_end whether the scan range includes the left end key.
+ * @param[in] r_key the right end key of range. This argument is ignored if `r_end` is scan_endpoint::INF.
+ * @param[in] r_end whether the scan range includes the right end key.
+ * @attention Contrary to yakushima where ranges are strictly validated, this function does not return an error for the
+ * invalid range (condition that results in empty set, e.g. l_key > r_key.) and returns WARN_NOT_FOUND instead.
+ * @param[in] right_to_left if true, the scan starts from right end to left. Otherwise, left end to right.
+ * @param[out] handle the handle to identify the context that holds the state of an ongoing scan operation.
+ * This handle will be deleted at the end of the transaction or close_scan command.
+ * @return Status::OK success.
+ * @return Status::WARN_INVALID_KEY_LENGTH The @a key is invalid. Key length should be equal or less than 30KB.
+ * @return Status::WARN_MAX_OPEN_SCAN The fail due to the limits of number of concurrent open_scan without close_scan.
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun.
+ * @return Status::WARN_NOT_FOUND The scan couldn't find any records.
+ * @return Status::WARN_PREMATURE In long or read only tx mode, it have to wait for some high priority transactions.
+ * @return Status::WARN_STORAGE_NOT_FOUND The storage is not found.
+ * @return Status::ERR_CC Error about concurrency control.
+ * @return Status::ERR_READ_AREA_VIOLATION error about read area.
+ */
+Status open_iscan(Token token, Storage storage,
+                  std::string_view l_key, scan_endpoint l_end,
+                  std::string_view r_key, scan_endpoint r_end,
+                  bool right_to_left,
+                  ScanHandle& handle);
+
+/**
  * @brief advance cursor
  * @details This function advances the cursor by one in the range opened by
  * open_scan. It skips deleted record.
