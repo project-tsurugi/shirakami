@@ -303,6 +303,24 @@ Status open_iscan(Token token, Storage storage,
                   ScanHandle& handle);
 
 /**
+ * @brief prefetch entries from yakushima index and save to iscan context
+ * @details This function prefetches up to @p max_size entries from yakushima index.
+ * The prefetched entries are available for subsequent @ref next() calls.
+ * Once prefetched, this function cannot be called again on the same context.
+ * @param[in] token the token retrieved by enter()
+ * @param[in] handle the handle to identify the iscan context
+ * @param[in] max_size max Record number to prefetch from yakushima index.
+ * @p max_size counts entries including placeholder/tombstone records,
+ * which are skipped by @ref next(). So @ref next() may return fewer entries than @p max_size.
+ * @return Status::WARN_ILLEGAL_OPERATION called with invalid context. For example,
+ * called this method with non-iscan context or called twice on the same context.
+ * @return Status::WARN_INVALID_HANDLE @p handle is invalid.
+ * @return Status::WARN_NOT_BEGIN The transaction was not begun. So it can't execute it.
+ * @return Status::OK success
+ */
+Status prefetch_iscan(Token token, ScanHandle handle, std::size_t max_size);
+
+/**
  * @brief advance cursor
  * @details This function advances the cursor by one in the range opened by
  * open_scan. It skips deleted record.
