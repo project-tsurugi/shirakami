@@ -56,4 +56,27 @@ static inline void ltx_begin_wait(Token t) {
     ASSERT_OK(release_tx_state_handle(thd));
 }
 
+static inline database_options envflags() {
+    database_options ret{};
+    // check environ "SHIRAKAMI_TEST_ITERATOR_BASED_SCAN"
+    constexpr bool iterator_based_scan_default = false;
+    bool iterator_based_scan = iterator_based_scan_default;
+    if (auto* envstr = std::getenv("SHIRAKAMI_TEST_ITERATOR_BASED_SCAN");
+        envstr != nullptr && *envstr != '\0') {
+        if (std::strcmp(envstr, "1") == 0) {
+            iterator_based_scan = true;
+        } else if (std::strcmp(envstr, "0") == 0) {
+            iterator_based_scan = false;
+        } else {
+            LOG(INFO) << log_location_prefix << "invalid value is set for "
+                      << "SHIRAKAMI_TEST_ITERATOR_BASED_SCAN; using default value";
+        }
+    }
+    VLOG(log_debug) << log_location_prefix << "envflag: iterator_based_scan is "
+                    << (iterator_based_scan ? "enabled" : "disabled")
+                    << (iterator_based_scan == iterator_based_scan_default ? " (default)" : "");
+    ret.set_iterator_based_scan(iterator_based_scan);
+    return ret;
+}
+
 } // namespace shirakami
