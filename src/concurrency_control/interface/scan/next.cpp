@@ -249,6 +249,7 @@ static Status next_iscan_from_prefetch(session* ti, scan_context* sc) {
     auto& prefetched = sci.get_scan_prefetch_ref();
     auto occ_cb = [&ti](yakushima::node_version64* nvp, yakushima::node_version64_body nvb) -> bool {
         auto rc = ti->get_node_set().emplace_back({nvb, nvp});
+VLOG(30) << "occ_cb nvp:" << nvp << " nvb:{" << nvb << "} rc:" << rc;
         return (rc == Status::ERR_CC);
     };
     if (sci.get_error() == Status::ERR_CC) {
@@ -263,6 +264,7 @@ static Status next_iscan_from_prefetch(session* ti, scan_context* sc) {
         ++scan_index;
 
         // check range of cursor
+VLOG(30) << "max_size:" << sci.get_max_size() << " scan_index:" << scan_index << " prefetched.size:" << prefetched.get_data_ref().size();
         if (sci.get_max_size() <= scan_index) { // already reached limit before
             return Status::WARN_SCAN_LIMIT;
         }
@@ -272,6 +274,7 @@ static Status next_iscan_from_prefetch(session* ti, scan_context* sc) {
         }
 
         bool fail = prefetched.consume_node_block(occ_cb); // if not-SHORT, node_block is always empty
+VLOG(30) << "fail:" << fail << " prefetched.size:" << prefetched.get_data_ref().size();
         if (fail) {
             sci.set_error(Status::ERR_CC);
             prefetched.discard();
@@ -365,6 +368,7 @@ static Status prefetch_iscan_body(Token token, ScanHandle handle, std::size_t ma
         } else {
             yrc = yakushima::iscan_next(sci.get_ycontext_ref(), value);
         }
+VLOG(30) << "yrc:" << yrc << " value:" << value;
 
         if (yrc == yakushima::status::WARN_CONCURRENT_OPERATIONS || yrc == yakushima::status::WARN_ABORTED_BY_USER) {
             LOG_FIRST_N(ERROR, 1) << log_location_prefix << "unreachable path";
@@ -377,6 +381,22 @@ static Status prefetch_iscan_body(Token token, ScanHandle handle, std::size_t ma
         }
         Record* rec_ptr = reinterpret_cast<Record*>(value); // NOLINT
         prefetched.push_back_rec_ptr(rec_ptr);
+    }
+    if (VLOG_IS_ON(30)) {
+        auto& data = prefetched.get_data_ref();
+        for (std::size_t i = 0;;) {
+            if (i >= data.size()) { break; }
+            std::size_t num = data[i++].num_of_nodes;
+LOG(INFO) << "num:" << num;
+            for (std::size_t j = 0; j < num; j++) {
+                auto* nvp = data[i++].nvp;
+                auto nvb = data[i++].nvb;
+LOG(INFO) << "[" << j << "]:" << nvp << " {" << nvb << "}";
+            }
+            if (i >= data.size()) { break; }
+            auto* rec_ptr = data[i++].rec_ptr;
+LOG(INFO) << "rec_ptr:" << rec_ptr;
+        }
     }
     return Status::OK;
 }

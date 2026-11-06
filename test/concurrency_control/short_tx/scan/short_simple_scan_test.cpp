@@ -179,6 +179,7 @@ TEST_F(simple_scan, scan_range_endpoint2) { // NOLINT
     ScanHandle handle{};
     std::string sb{};
     {
+VLOG(0) << "start";
         ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "",
                                         scan_endpoint::INF, handle));
         ASSERT_EQ(Status::OK, read_key_from_scan(s, handle, sb));

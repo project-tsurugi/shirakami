@@ -113,6 +113,7 @@ public:
         void discard() {
             data_.clear();
         }
+        auto& get_data_ref() { return data_; } // for debug
     };
     scan_prefetch& create_scan_prefetch() {
         scan_prefetch_ = std::make_unique<scan_prefetch>();
