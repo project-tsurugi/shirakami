@@ -3,9 +3,9 @@
 #include <cstring>
 #include <string>
 
+#include "test_tool.h"
+
 #include "shirakami/interface.h"
-#include "glog/logging.h"
-#include "gtest/gtest.h"
 #include "shirakami/api_diagnostic.h"
 #include "shirakami/api_storage.h"
 #include "shirakami/scheme.h"
@@ -27,7 +27,7 @@ public:
 
     void SetUp() override {
         std::call_once(init_, call_once_f);
-        init(); // NOLINT
+        init(envflags());
     }
 
     void TearDown() override { fin(); }
