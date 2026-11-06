@@ -409,6 +409,7 @@ static Status open_scan_body(
                          // by inline optimization
                          std::get<index_nvec_body>(nvec.at(i + nvec_delta)),
                          std::get<index_nvec_ptr>(nvec.at(i + nvec_delta)));
+VLOG(0) << "vec[" << i << "]=<" << std::get<0>(vec.back()) << ",{" << std::get<1>(vec.back()) << "}," << std::get<2>(vec.back()) << ">";
     }
 
     // increment for head skipped records

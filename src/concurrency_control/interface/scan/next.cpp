@@ -243,6 +243,7 @@ static Status next_iscan_from_prefetch(session* ti, scan_context* sc) {
     auto& prefetched = sci.get_scan_prefetch_ref();
     auto occ_cb = [&ti](yakushima::node_version64* nvp, yakushima::node_version64_body nvb) -> bool {
         auto rc = ti->get_node_set().emplace_back({nvb, nvp});
+VLOG(0) << "occ_cb nvp:" << nvp << " nvb:{" << nvb << "} rc:" << rc;
         return (rc == Status::ERR_CC);
     };
     for (;;) {
@@ -250,11 +251,13 @@ static Status next_iscan_from_prefetch(session* ti, scan_context* sc) {
         ++scan_index;
 
         // check range of cursor
+VLOG(0) << "max_size:" << sci.get_max_size() << " scan_index:" << scan_index << " prefetched.size:" << prefetched.get_data_ref().size();
         if (sci.get_max_size() <= scan_index || prefetched.empty()) {
             return Status::WARN_SCAN_LIMIT;
         }
 
         bool fail = prefetched.consume_node_block(occ_cb); // if not-SHORT, node_block is always empty
+VLOG(0) << "fail:" << fail << " prefetched.size:" << prefetched.get_data_ref().size();
         if (fail) {
             sci.set_error(Status::ERR_CC);
             break;
@@ -343,11 +346,28 @@ static Status iscan_prefetch_all_body(Token token, ScanHandle handle, std::size_
         } else {
             yrc = yakushima::iscan_next(sci.get_ycontext_ref(), value);
         }
+VLOG(30) << "yrc:" << yrc << " value:" << value;
         if (yrc == yakushima::status::OK_SCAN_END) {
             break;
         }
         Record* rec_ptr = reinterpret_cast<Record*>(value); // NOLINT
         prefetched.push_back_rec_ptr(rec_ptr);
+    }
+    if (VLOG_IS_ON(0)) {
+        auto& data = prefetched.get_data_ref();
+        for (std::size_t i = 0;;) {
+            if (i >= data.size()) { break; }
+            std::size_t num = data[i++].num_of_nodes;
+VLOG(0) << "num:" << num;
+            for (std::size_t j = 0; j < num; j++) {
+                auto* nvp = data[i++].nvp;
+                auto nvb = data[i++].nvb;
+VLOG(0) << "[" << j << "]:" << nvp << " {" << nvb << "}";
+            }
+            if (i >= data.size()) { break; }
+            auto* rec_ptr = data[i++].rec_ptr;
+VLOG(0) << "rec_ptr:" << rec_ptr;
+        }
     }
     return Status::OK;
 }

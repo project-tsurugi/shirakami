@@ -103,6 +103,7 @@ public:
         void push_back_rec_ptr(Record* rec_ptr) {
             data_.emplace_back(rec_ptr);
         }
+        auto& get_data_ref() { return data_; } // for debug
     };
     scan_prefetch& get_scan_prefetch_ref() { return scan_prefetch_; }
 
