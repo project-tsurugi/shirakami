@@ -389,11 +389,6 @@ static Status open_scan_body(
         }
     }
 
-    // for hit, register left end point info as already read
-    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-        long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end);
-    }
-
     // Cache a pointer to record.
     auto* sc = ti->get_scan_handle().create_scan_context(std::in_place_type<scan_context_vscan>);
     if (sc == nullptr) {
@@ -415,8 +410,19 @@ static Status open_scan_body(
     auto& scan_index = sc->get_scan_index_ref();
     scan_index += head_skip_rec_n;
 
-    sc->set_r_key(r_key);
-    sc->set_r_end(r_end);
+    // for hit, register between scan-start point and first entry as already read
+    if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
+        auto first_key = std::get<0>(vec[scan_index])->get_key_view();
+        if (right_to_left) {
+            long_tx::update_local_read_range(ti, wp_meta_ptr, first_key, scan_endpoint::INCLUSIVE, r_key, r_end);
+        } else {
+            long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end, first_key, scan_endpoint::INCLUSIVE);
+        }
+    }
+
+    sc->set_end_key(right_to_left ? l_key : r_key);
+    sc->set_end_kind(right_to_left ? l_end : r_end);
+    sc->set_right_to_left(right_to_left);
 
     return fin_process(ti, Status::OK);
 }
@@ -520,10 +526,14 @@ static Status open_scan_body_iscan(
         return fin_process(ti, rc);
     }
 
-    // for hit, register left end point info as already read
-    // XXX: broken in reverse scan, currentry reverse scan is used only in RTX
+    // for hit, register between scan-start point and first entry as already read
     if (ti->get_tx_type() == transaction_options::transaction_type::LONG) {
-        long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end);
+        auto first_key = rec_ptr->get_key_view();
+        if (right_to_left) {
+            long_tx::update_local_read_range(ti, wp_meta_ptr, first_key, scan_endpoint::INCLUSIVE, r_key, r_end);
+        } else {
+            long_tx::update_local_read_range(ti, wp_meta_ptr, l_key, l_end, first_key, scan_endpoint::INCLUSIVE);
+        }
     }
 
     // Cache a pointer to record.
@@ -540,9 +550,9 @@ static Status open_scan_body_iscan(
     sci.get_rec_ptr_ref() = rec_ptr; // NOLINT
     sci.get_ycontext_ref() = ycontext;
 
-    // XXX: broken in reverse scan, currentry reverse scan is used only in RTX
-    sc->set_r_key(r_key);
-    sc->set_r_end(r_end);
+    sc->set_end_key(right_to_left ? l_key : r_key);
+    sc->set_end_kind(right_to_left ? l_end : r_end);
+    sc->set_right_to_left(right_to_left);
 
     return fin_process(ti, Status::OK);
 }

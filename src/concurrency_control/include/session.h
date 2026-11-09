@@ -45,6 +45,8 @@ public:
      * overtaken ltxs, read information compressed to range information,
      * 1: left key, 2: left point info, 3: right key, 4: right point info, 5:
      * whether it is initialize.
+     * XXX: left/right point info is scan_endpoint, but in many source location,
+     * no distinction is made between EXCLUSIVE and INCLUSIVE.
      */
     using overtaken_ltx_set_type =
             std::map<wp::wp_meta*,
@@ -475,10 +477,7 @@ public:
                     st, std::make_tuple(key, scan_endpoint::INCLUSIVE, key,
                                         scan_endpoint::INCLUSIVE));
         } else {
-            std::string& now_lkey = std::get<0>(itr->second);
-            scan_endpoint& now_lpoint = std::get<1>(itr->second);
-            std::string& now_rkey = std::get<2>(itr->second);
-            scan_endpoint& now_rpoint = std::get<3>(itr->second);
+            auto& [now_lkey, now_lpoint, now_rkey, now_rpoint] = itr->second;
 
             // check initialize
             if (now_lkey.empty() && now_lpoint == scan_endpoint::EXCLUSIVE &&
