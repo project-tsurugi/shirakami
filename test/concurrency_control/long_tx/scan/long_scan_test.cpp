@@ -342,8 +342,9 @@ TEST_F(long_scan_test, iscan_read_range_reverse) {
     ASSERT_OK(leave(s));
 }
 
-TEST_F(long_scan_test, DISABLED_scan_read_range_limit_by_maxsize) {
+TEST_F(long_scan_test, scan_read_range_limit_by_maxsize) {
     // if scan is ended by scan-limit (max size), unread area is not added to read-range
+    if (!get_scan_mode_iterator_based()) { GTEST_SKIP() << "this test is not passed if vscan"; }
 
     // setup
     Storage st{};
