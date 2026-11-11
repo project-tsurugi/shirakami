@@ -561,6 +561,13 @@ Status open_scan(Token const token, Storage storage, // NOLINT
                  const std::string_view l_key, const scan_endpoint l_end,
                  const std::string_view r_key, const scan_endpoint r_end,
                  ScanHandle& handle, std::size_t const max_size, bool right_to_left) {
+    if (get_scan_mode_iterator_based()) {
+        Status ret = open_iscan(token, storage, l_key, l_end, r_key, r_end, right_to_left, handle);
+        if (ret == Status::OK) {
+            ret = prefetch_iscan(token, handle, max_size == 0UL ? SIZE_MAX : max_size - 1);
+        }
+        return ret;
+    }
     shirakami_log_entry << "open_scan token: " << token << ", storage: " << storage
                         << "," shirakami_binstring(l_key) ", l_end: " << l_end
                         << "," shirakami_binstring(r_key) ", r_end: " << r_end
@@ -571,11 +578,7 @@ Status open_scan(Token const token, Storage storage, // NOLINT
     { // for strand
         std::shared_lock<std::shared_mutex> lock{ti->get_mtx_state_da_term(), std::defer_lock};
         if (ti->get_mutex_flags().do_readaccess_daterm()) { lock.lock(); }
-        if (get_scan_mode_iterator_based()) {
-            ret = open_scan_body_iscan(token, storage, l_key, l_end, r_key, r_end, handle, max_size, right_to_left);
-        } else {
-            ret = open_scan_body(token, storage, l_key, l_end, r_key, r_end, handle, max_size, right_to_left);
-        }
+        ret = open_scan_body(token, storage, l_key, l_end, r_key, r_end, handle, max_size, right_to_left);
     }
     ti->process_before_finish_step();
     shirakami_log_exit << "open_scan, Status: " << ret << ", handle: " << handle;
