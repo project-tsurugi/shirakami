@@ -120,7 +120,12 @@ TEST_F(read_only_reverse_scan_test, fail_to_fetch_max_size) { // NOLINT
             ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
             wait_epoch_update();
             ScanHandle hd{};
-            ASSERT_EQ(Status::WARN_NOT_FOUND, open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF, hd, 1, true));
+            auto rc_open = open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF, hd, 1, true);
+            if (get_scan_mode_iterator_based()) {
+                ASSERT_EQ(Status::OK, rc_open); // find first non-absent
+            } else {
+                ASSERT_EQ(Status::WARN_NOT_FOUND, rc_open);
+            }
             ASSERT_EQ(Status::OK, commit(s)); // NOLINT
         }
     }
