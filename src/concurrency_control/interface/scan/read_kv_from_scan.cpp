@@ -54,8 +54,16 @@ static Status read_from_scan(Token token, ScanHandle handle, bool key_read,
     if (sc->is_iscan()) {
         auto& sci = sc->get_context_iscan_ref();
         if (sci.get_max_size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }
+        if (sci.get_error() == Status::ERR_CC
+            && ti->get_tx_type() == transaction_options::transaction_type::SHORT) { // XXX: currently always SHORT
+            std::unique_lock<std::mutex> lk{ti->get_mtx_result_info()};
+            ti->get_result_info().set_storage_name(st);
+            ti->set_result(reason_code::CC_OCC_PHANTOM_AVOIDANCE);
+            short_tx::abort(ti);
+            return Status::ERR_CC;
+        }
         rec_ptr = sci.get_rec_ptr_ref();
-        node_check = [&sci] { return sci.get_error(); };
+        node_check = [&sci] { return sci.get_error(); }; // XXX: currently always return OK
     } else {
         auto& scan_buf = sc->get_context_vscan_ref().get_vec();
         if (scan_buf.size() <= scan_index) { return Status::WARN_SCAN_LIMIT; }

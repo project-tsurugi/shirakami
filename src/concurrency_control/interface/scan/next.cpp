@@ -65,8 +65,15 @@ static Status next_iscan(session* ti, scan_context* sc) {
         auto rc = ti->get_node_set().emplace_back({nvb, nvp});
         return (rc == Status::ERR_CC);
     };
+    auto& sci = sc->get_context_iscan_ref();
+    if (sci.get_error() == Status::ERR_CC) {
+        // TODO: return ERR_CC
+        // but currently next() cannot return ERR_CC by API spec.
+        // avoid infinite loop when user repeat calling next() without read_*_from_scan().
+        sci.set_max_size(sc->get_scan_index());
+        return Status::WARN_SCAN_LIMIT;
+    }
     for (;;) {
-        auto& sci = sc->get_context_iscan_ref();
         auto& scan_index = sc->get_scan_index_ref();
         ++scan_index;
 
