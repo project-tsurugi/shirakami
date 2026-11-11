@@ -376,4 +376,38 @@ TEST_F(long_scan_test, scan_read_range_limit_by_maxsize) {
     ASSERT_OK(leave(s));
 }
 
+TEST_F(long_scan_test, iscan_read_range_limit_by_maxsize) {
+    // if scan is ended by scan-limit (max size), unread area is not added to read-range
+
+    // setup
+    Storage st{};
+    ASSERT_OK(create_storage("", st));
+    Token s{};
+    ASSERT_OK(enter(s));
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_OK(upsert(s, st, "1", ""));
+    ASSERT_OK(upsert(s, st, "2", ""));
+    ASSERT_OK(upsert(s, st, "3", ""));
+    ASSERT_OK(commit(s));
+    ASSERT_OK(leave(s));
+
+    // test
+    ASSERT_OK(enter(s));
+    ASSERT_OK(tx_begin({s, transaction_options::transaction_type::LONG, {st}}));
+    auto* ti = static_cast<session*>(s);
+    wait_epoch_update();
+    wp::wp_meta* wp_meta_ptr{};
+    ASSERT_OK(wp::find_wp_meta(st, wp_meta_ptr));
+    ScanHandle hd{};
+    ASSERT_OK(open_iscan(s, st, "1x", scan_endpoint::INCLUSIVE, "999", scan_endpoint::EXCLUSIVE, false, hd));
+    ASSERT_OK(prefetch_iscan(s, hd, 0)); // first elem + no more elems
+    std::string vb{};
+    ASSERT_OK(read_key_from_scan(s, hd, vb));
+    ASSERT_EQ(vb, "2");
+    EXPECT_RANGE_EQ(ti, wp_meta_ptr, "1x", scan_endpoint::INCLUSIVE, "2", scan_endpoint::INCLUSIVE);
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
+    EXPECT_RANGE_EQ(ti, wp_meta_ptr, "1x", scan_endpoint::INCLUSIVE, "2", scan_endpoint::INCLUSIVE);
+    ASSERT_OK(leave(s));
+}
+
 } // namespace shirakami::testing
