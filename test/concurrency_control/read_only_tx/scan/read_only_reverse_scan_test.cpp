@@ -77,6 +77,41 @@ TEST_F(read_only_reverse_scan_test, simple) { // NOLINT
     ASSERT_EQ(Status::OK, leave(s));
 }
 
+TEST_F(read_only_reverse_scan_test, simple_emu) { // NOLINT
+    if (!get_scan_mode_iterator_based()) { GTEST_SKIP() << "this test is for iscan's open_scan emulation"; }
+    // verify simple scenario using reverse scan (without scan_limit=1)
+    Storage st{};
+    ASSERT_EQ(create_storage("", st), Status::OK);
+    Token s{};
+    ASSERT_EQ(Status::OK, enter(s));
+    // prepare data
+    std::string k0{"k"};
+    std::string v0{"v"};
+    std::string k1{"k1"};
+    std::string v1{"v1"};
+    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::SHORT}));
+    ASSERT_EQ(Status::OK, upsert(s, st, k0, v0));
+    ASSERT_EQ(Status::OK, upsert(s, st, k1, v1));
+    ASSERT_EQ(Status::OK, commit(s)); // NOLINT
+    ASSERT_EQ(Status::OK, tx_begin({s, transaction_options::transaction_type::READ_ONLY}));
+    wait_epoch_update();
+    ScanHandle hd{};
+    ASSERT_EQ(Status::OK, open_scan(s, st, "", scan_endpoint::INF, "", scan_endpoint::INF, hd, 0, true));
+    std::string sb{};
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, sb));
+    ASSERT_EQ(sb, k1);
+    ASSERT_EQ(Status::OK, read_value_from_scan(s, hd, sb));
+    ASSERT_EQ(sb, v1);
+    ASSERT_EQ(Status::OK, next(s, hd));
+    ASSERT_EQ(Status::OK, read_key_from_scan(s, hd, sb));
+    ASSERT_EQ(sb, k0);
+    ASSERT_EQ(Status::OK, read_value_from_scan(s, hd, sb));
+    ASSERT_EQ(sb, v0);
+    ASSERT_EQ(Status::WARN_SCAN_LIMIT, next(s, hd));
+    ASSERT_EQ(Status::OK, commit(s));
+    ASSERT_EQ(Status::OK, leave(s));
+}
+
 TEST_F(read_only_reverse_scan_test, bad_parameters) { // NOLINT
     if (get_scan_mode_iterator_based()) { GTEST_SKIP() << "this test is for vscan, iscan supports these parameters"; }
     // currently reverse scan must be called with max_size == 1 and r_end == INF
