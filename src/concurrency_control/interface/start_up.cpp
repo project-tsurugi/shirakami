@@ -63,7 +63,7 @@ static void for_output_config(const database_options& options) {
     VLOG(log_debug) << log_location_prefix_config << "iterator_based_scan: "
                     << std::boolalpha << options.get_iterator_based_scan() << ", "
                        "Make scan operations iterator-based. "
-                       "Default is false (vector-based).";
+                       "Default is true.";
 }
 
 #if defined(PWAL)
