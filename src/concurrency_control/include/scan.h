@@ -99,6 +99,11 @@ public:
             data_.pop_front();
             return ret.rec_ptr;
         }
+        std::pair<yakushima::node_version64*, yakushima::node_version64_body> read_first_nv() {
+            // for vscan emulation: get first node version info
+            if (data_.size() < 3 || data_.at(0).num_of_nodes == 0) { return {nullptr, {}}; }
+            return {data_.at(1).nvp, data_.at(2).nvb};
+        }
         std::uint64_t& begin_node_block() {
             data_.emplace_back(0UL);
             return data_.back().num_of_nodes;
