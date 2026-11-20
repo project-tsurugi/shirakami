@@ -565,6 +565,18 @@ Status open_scan(Token const token, Storage storage, // NOLINT
         Status ret = open_iscan(token, storage, l_key, l_end, r_key, r_end, right_to_left, handle);
         if (ret == Status::OK) {
             ret = prefetch_iscan(token, handle, max_size == 0UL ? SIZE_MAX : max_size - 1);
+            // vscan emulation
+            if (ret == Status::OK) {
+                auto* sc = static_cast<scan_context*>(handle);
+                auto& sci = sc->get_context_iscan_ref();
+                auto& prefetched = sci.get_scan_prefetch_ref();
+                auto nv = prefetched.read_first_nv();
+                if (nv.first != nullptr) {
+                    auto* ti = static_cast<session*>(token);
+                    auto rc = ti->get_node_set().emplace_back({nv.second, nv.first});
+                    if (rc == Status::ERR_CC) { sci.set_error(rc); }
+                }
+            }
         }
         return ret;
     }
